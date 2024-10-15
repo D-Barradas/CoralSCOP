@@ -9,6 +9,7 @@ segment_anything
 **.json
 **.jpg 
 **.zip
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
