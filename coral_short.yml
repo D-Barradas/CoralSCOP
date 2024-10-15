@@ -1,0 +1,27 @@
+name: coral_short
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=11.8
+  - code-server
+  - seaborn
+  - scikit-learn
+  - opencv
+  - ipykernel
+  - jupyterlab
+  - ca-certificates
+  - certifi
+  - openssl
+  - scikit-image
+  - pip:
+    - streamlit
+    - streamlit-extras
+    - segment-anything==1.0
