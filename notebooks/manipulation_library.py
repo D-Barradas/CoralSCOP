@@ -21,7 +21,9 @@ def get_image(image_path):
     image = cv2.imread(image_path)
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (1200, 800))
+    # resulotion of the image for quick test 
+    # image = cv2.resize(image, (1200, 800)) # 1/4 of the original image distant threshold for this ~125
+    image = cv2.resize(image, (3600, 2400)) #  image distant threshold for this ~375 for this resolution
 
     # image = preprocess_histograms( image=image)
     
@@ -216,12 +218,20 @@ def show_images_grid(images, titles=None, figsize=(20, 20)):
     plt.tight_layout()
     plt.show()
 
-def background_to_black ( image, index ):
+# def background_to_black ( image, index ):
+#     # Apply the mask to the image
+#     masked_img = image.copy()
+#     masked_pixels = masked_img[masks[index]['segmentation']==True]
+#     masked_img[masks[index]['segmentation']==False] = (0, 0, 0)  # Set masked pixels to black
+#     return masked_img ,masked_pixels
+
+def background_to_black ( image, index , masks  ):
     # Apply the mask to the image
     masked_img = image.copy()
     masked_pixels = masked_img[masks[index]['segmentation']==True]
     masked_img[masks[index]['segmentation']==False] = (0, 0, 0)  # Set masked pixels to black
     return masked_img ,masked_pixels
+
 
 def get_sorted_by_coordinates(image, anns):
     area_list=[]
@@ -232,7 +242,8 @@ def get_sorted_by_coordinates(image, anns):
     for i in range(len(anns)):
         x, y, width, height = anns[i]['bbox']
         area = anns[i]["area"]
-        image_b, masked_pixels = background_to_black(image=image, index=i)
+        # image_b, masked_pixels = background_to_black(image=image, index=i)
+        image_b, masked_pixels = background_to_black(image=image, index=i , masks=anns)
         cropped_image = image_b[int(y):int(y+height), int(x):int(x+width)]
         x_coord, y_coord = anns[i]['point_coords'][0]
         X_coord_list.append(x_coord) 
