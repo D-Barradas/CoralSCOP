@@ -94,6 +94,17 @@ def process_images_and_use_sorted_mask(image, masks):
 # Function to get user input using argparse
 
 def get_user_input():
+    """ 
+    Get user input using argparse. The usage is as follows:
+
+    python segmetation_ocr_script.py ../data/raw/test_10 375 clockwise 
+    
+    The first argument is the main path to the images.
+    The second argument is the threshold distance to consider bounding boxes as close. this is related to the distance between the center of the bounding boxes, and the threshold is in pixels. 
+    Meaning this is second argumet is related to the size of the image. E.g for images of size 1200 x 800, a threshold of 125. 
+    In this case the threshold is 375, which is related to the size of the image 3600 x 2400 (this is hardcoded on manipulation library).
+    The third argument is the rotation option, which can be clockwise, counterclockwise, or none.
+    """
     parser = argparse.ArgumentParser(description="Process images and find close bounding boxes.")
     parser.add_argument('main_path', type=str, help='The main path to the images.')
     parser.add_argument('threshold', type=int, help='The threshold distance to consider bounding boxes as close.')
@@ -133,6 +144,8 @@ for image_file in image_files:
         image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
     elif rotate_option == 'counterclockwise':
         image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    else: # no rotation option is none
+        pass
     
 
     # %%
