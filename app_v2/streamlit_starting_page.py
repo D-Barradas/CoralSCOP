@@ -10,6 +10,29 @@ st.write("# Welcome to The app! 👋")
 
 st.sidebar.success("Select each stage above, one by one.")
 
+# # initialize all st.session_state variables
+# variables = ["chart_img", "coral_img", "rotated_img", "custom_chart", "up", "down", "left", "right","custom_color_chart"]
+
+# for cardinalities in variables:
+#     if cardinalities not in st.session_state:
+#         st.session_state[cardinalities] = None
+
+# add a markdown section to explain that this button will reset the session
+# st.markdown(
+#     """
+#     # Reset Session
+#     This button will reset the session and clear all the images you have uploaded.
+#     """)
+# # allow the user to reset the session
+# if st.button("Reset Session"):
+#     for cardinalities in variables:
+#         st.session_state[cardinalities] = None
+
+
+
+    
+
+
 st.markdown(
     """
     
