@@ -126,7 +126,7 @@ def select_coral_and_color_chart_area(image):
                 st.write("Color Chart:", st.session_state.get("chart", "Not saved"))
 
 
-                # print (len(st.session_state), type(st.session_state))
+                print (len(st.session_state), type(st.session_state))
 
                 if len(st.session_state) == 3:
                     st.write("Coral and Chart selected.")
@@ -143,6 +143,7 @@ def get_coral_and_chart_image(local_image , boxes):
     dictionary_of_greys = {} 
 
     for t in boxes.keys():
+        print (t)
 
         if t == "chart":
             cropped_image = crop_my_image(image=local_image,boxes=boxes, tag=t)
@@ -210,7 +211,19 @@ def main():
     # st.title('Image Segmentation and Analysis')
     st.title('Select the coral and the chart')
 
+    # if "coral_img" not in st.session_state:
+    #     st.session_state["coral"] = None
+    # if "chart_img" not in st.session_state:
+    #     st.session_state["coral"] = None
 
+    if st.button("Reset Session"):
+        for key in st.session_state.keys():
+            del st.session_state[key]
+
+        if "chart" not in st.session_state:
+            st.session_state["chart"] = None
+        if "coral" not in st.session_state:
+            st.session_state["coral"] = None
 
     # ... (initialization of session state)
     # angle = st.sidebar.slider("Rotation Angle", -180, 180, 0)
@@ -222,10 +235,12 @@ def main():
 
 
         selected_regions = select_coral_and_color_chart_area(image)
+        print (selected_regions)
         if st.button("Save Images to memory"):
             dictionary_of_crops, dictionary_of_greys = get_coral_and_chart_image(image , selected_regions)
             list_of_images=[item for key,item in dictionary_of_crops.items()]
             st.image(list_of_images,use_column_width=True)
+            print(dictionary_of_crops.keys())
             st.session_state["coral_img"] = dictionary_of_crops["coral"]
             st.session_state["chart_img"] = dictionary_of_crops["chart"]
 
