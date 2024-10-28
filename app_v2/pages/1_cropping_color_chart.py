@@ -147,11 +147,11 @@ def get_coral_and_chart_image(local_image , boxes):
 
         if t == "chart":
             cropped_image = crop_my_image(image=local_image,boxes=boxes, tag=t)
-            try :
-                cropped_image = correct_tilt(cropped_image,False)
-            except:
-                print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
-                cropped_image = correct_tilt(cropped_image,True)
+            # try :
+            #     cropped_image = correct_tilt(cropped_image,False)
+            # except:
+            #     print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
+            #     cropped_image = correct_tilt(cropped_image,True)
             dictionary_of_crops[t]= cropped_image
             dictionary_of_greys[t]= cropped_image
 
