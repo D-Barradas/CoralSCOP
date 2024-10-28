@@ -1,10 +1,7 @@
 import streamlit as st
-from PIL import Image
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
 from streamlit_extras.image_selector import image_selector, show_selection
 from streamlit_extras.switch_page_button import switch_page
+
 
 with open("load_functions.py") as f:
     exec(f.read())
