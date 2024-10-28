@@ -516,6 +516,22 @@ class OcrAnalysis:
             box = np.array([int(coord) for coord in [top_left[0], top_left[1], bottom_right[0], bottom_right[1]]])
             bboxes.append(box)
             text_list.append(text)
+
+        # sort the bboxes by the x coordinate in ascending order
+        bboxes = [ 
+            bbox for _, bbox in sorted(
+                zip([box[0] for box in bboxes], bboxes)
+                )
+                ]
+
+        text_list = [  
+            text for _, text in sorted(
+                zip([box[0] for box in bboxes], text_list)
+                    )  
+                    ]
+
+
+
         return bboxes, text_list
 
     @staticmethod
