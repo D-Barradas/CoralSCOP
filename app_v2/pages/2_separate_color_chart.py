@@ -107,11 +107,13 @@ def resize_and_rotate_image(local_image, boxes):
         if t == "down":
             cropped_image = crop_my_image(image=local_image,boxes=boxes, tag=t)
             cropped_image = cv2.rotate(cropped_image, cv2.ROTATE_180  )
-            try :
-                cropped_image = correct_tilt(cropped_image,False)
-            except:
-                print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
-                cropped_image = correct_tilt(cropped_image,True)
+
+            # try :
+            #     cropped_image = correct_tilt(cropped_image,False)
+            # except:
+            #     print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
+            #     cropped_image = correct_tilt(cropped_image,True)
+            
             resized_gray, resized_cropped  = resize_image(cropped_image) 
             dictionary_of_crops[t]= resized_cropped
             dictionary_of_greys[t]= resized_gray
@@ -121,11 +123,11 @@ def resize_and_rotate_image(local_image, boxes):
             cropped_image = crop_my_image(image=local_image,boxes=boxes, tag=t)
             cropped_image = cv2.rotate(cropped_image, cv2.ROTATE_90_CLOCKWISE ) 
 
-            try :
-                cropped_image = correct_tilt(cropped_image,False)
-            except:
-                print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
-                cropped_image = correct_tilt(cropped_image,True)
+            # try :
+            #     cropped_image = correct_tilt(cropped_image,False)
+            # except:
+            #     print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
+            #     cropped_image = correct_tilt(cropped_image,True)
 
             resized_gray, resized_cropped  = resize_image(cropped_image) 
             dictionary_of_crops[t]= resized_cropped
@@ -136,11 +138,12 @@ def resize_and_rotate_image(local_image, boxes):
             # cropped_image = crop_my_image(image=local_image,tag=t)
             cropped_image = crop_my_image(image=local_image,boxes=boxes, tag=t)
             cropped_image = cv2.rotate(cropped_image, cv2.ROTATE_90_COUNTERCLOCKWISE ) 
-            try :
-                cropped_image = correct_tilt(cropped_image,False)
-            except:
-                print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
-                cropped_image = correct_tilt(cropped_image,True)
+
+            # try :
+            #     cropped_image = correct_tilt(cropped_image,False)
+            # except:
+            #     print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
+            #     cropped_image = correct_tilt(cropped_image,True)
 
             resized_gray, resized_cropped  = resize_image(cropped_image) 
             dictionary_of_crops[t]= resized_cropped
@@ -151,16 +154,30 @@ def resize_and_rotate_image(local_image, boxes):
             # cropped_image = crop_my_image(image=local_image,tag=t)
             cropped_image = crop_my_image(image=local_image,boxes=boxes, tag=t)
             resized_gray, resized_cropped  = resize_image(cropped_image)
-            try :
-                cropped_image = correct_tilt(cropped_image,False)
-            except:
-                print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
-                cropped_image = correct_tilt(cropped_image,True)
+
+            # try :
+            #     cropped_image = correct_tilt(cropped_image,False)
+            # except:
+            #     print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
+            #     cropped_image = correct_tilt(cropped_image,True)
  
             dictionary_of_crops[t]= resized_cropped
             dictionary_of_greys[t]= resized_gray
             # cv2.imwrite(path_name, cropped_image)
     return dictionary_of_crops, dictionary_of_greys
+
+def apply_correct_tilt (dictionary_of_crops):
+    dictionary_of_crops_corrected = {}
+    for t in ["up","down","left","rigth"]:
+        cropped_image = dictionary_of_crops[t]
+        try :
+            cropped_image = correct_tilt(cropped_image,False)
+        except:
+            print ("Could not correct the rotation normally; Applying the Canny Edge filter with L2Gradient = True")
+            cropped_image = correct_tilt(cropped_image,True)
+        dictionary_of_crops_corrected[t]= cropped_image
+
+    return dictionary_of_crops_corrected
 
 def correct_tilt(image, gradient):
 
@@ -388,9 +405,25 @@ def main():
         list_of_images_grey=[item for key,item in dictionary_of_greys.items()]
         
         st.image(list_of_images)
+        # st.image(list_of_images_grey)
         st.session_state["color_crops"] = list_of_images
         st.session_state["grey_crops"] = list_of_images_grey
         
+    if st.button("Apply tilt correction"):
+        dictionary_of_crops, dictionary_of_greys = resize_and_rotate_image(local_image=image,boxes=selected_regions)
+
+        # this is the dictionary of crops in colors
+        dictionary_of_crops = apply_correct_tilt(dictionary_of_crops)
+        list_of_images=[item for key,item in dictionary_of_crops.items()]
+        st.image(list_of_images)
+        st.session_state["color_crops"] = list_of_images
+        # this is the dictionary of crops in grey
+        # dictionary_of_greys = apply_correct_tilt(dictionary_of_greys)
+        # list_of_images_grey=[item for key,item in dictionary_of_greys.items()]
+        # st.session_state["grey_crops"] = list_of_images_grey
+
+
+
 
     if st.button("Detect Writing"):
         reader = easyocr.Reader(["en"],gpu=True) # this needs to run only once to load the model into memory
