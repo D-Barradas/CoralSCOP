@@ -346,7 +346,7 @@ def place_copy(bounding_boxes):
                 distance = calculate_distance(bounding_boxes[i], bounding_boxes[j])
                 print(f"Distance between bounding boxes {i} and {j}: {distance} inside place copy")
     # avg_distance /= len(bboxes) * (len(bboxes) - 1) / 2
-    print( avg_distance, len(bounding_boxes) ,   len(bounding_boxes) - 1 )
+    # print( avg_distance, len(bounding_boxes) ,   len(bounding_boxes) - 1 )
     # avg_distance /= len(bboxes) * (len(bboxes) - 1)
     avg_distance /= len(bounding_boxes)
 
@@ -433,7 +433,7 @@ def main():
             
             result = reader.readtext(color_chart_segment)
             bboxes, text_list = OcrAnalysis.get_bounding_boxes(result)
-            print (len(bboxes), text_list)
+            # print (len(bboxes), text_list)
             ## here there should be a check
             # if len(bboxes) != 6 :
             # check the index number of the color_chart_segment missing 
@@ -489,13 +489,13 @@ def main():
 
 
             for t,bbox in zip(text_list,bboxes): 
-                print (t, bbox,"zip")
+                # print (t, bbox,"zip")
                 cropped_colors = OcrAnalysis.get_pixels_above_bbox(bbox=bbox,image=color_chart_segment)
                 df_color = get_colors_df(image=cropped_colors, number_of_colors=1, show_chart=False)
                 # print (t,df_color["rgb_colors"][0].tolist())
                 my_personal_chart[t]=tuple( round(x) for x in df_color["rgb_colors"][0].tolist() )
 
-        print (my_personal_chart.keys(), len(my_personal_chart.keys()))
+        # print (my_personal_chart.keys(), len(my_personal_chart.keys()))
         if my_personal_chart:
 
             new_keys = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6',
