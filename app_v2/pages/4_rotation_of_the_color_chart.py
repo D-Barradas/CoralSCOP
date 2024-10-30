@@ -20,7 +20,7 @@ def rotate_image(image, degrees):
     img_array = np.array(image)
 
     # add padding to the image to avoid cropping
-    img_array = cv2.copyMakeBorder(img_array, 100, 100, 100, 100, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+    img_array = cv2.copyMakeBorder(img_array, 300, 300, 300, 300, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
     # Rotate the image using OpenCV's rotation matrix
     height, width = img_array.shape[:2]
