@@ -214,7 +214,7 @@ def main():
             name = uploaded_file.name.split(".")[0]
 
             percent_complete = (idx + 1) / len(uploaded_files)
-            my_bar.progress(percent_complete , text=progress_text)
+            
 
             custom_color_chart = st.session_state["custom_color_chart"]
             # print (custom_color_chart.keys() ,"for loop")
@@ -240,56 +240,43 @@ def main():
 
             if len(list_of_images) > 1:
                 st.write(f"Warning More than one coral image detected on image:{name}")
+            # show the progress bar here
+            my_bar.progress(percent_complete , text=progress_text)
                 # for img in list_of_images[1:]:
                 #     plot_compare_mapped_image_batch_mode(img,custom_color_chart,idx)
             # for img in list_of_images:
                 # plot_compare_mapped_image_batch_mode(img,custom_color_chart,idx)
     # here there is a button to download the results
-    if st.button("Download Results"):
-        # lets create a loop to download all the images
-        # Lets put all the images in a list and create a zip file
-        # lets put all the csv in a list and create a zip file
-        # then we will download the zip files
+    if st.button("Process Results"):
+        # Create lists to store images and CSVs
         images = []
         csvs = []
+        names = []
         for idx, uploaded_file in enumerate(uploaded_files):
             name = uploaded_file.name.split(".")[0]
+            names.append(name)
             images.append(st.session_state[f"mapped_image_{idx}_{name}"])
             csvs.append(st.session_state[f"color_distribution_data_{idx}_{name}"])
 
-        # Create a zip file with the images
-        images_zip = BytesIO()
-        with ZipFile(images_zip, 'w') as z:
+        # Create a zip file with the images and CSVs
+        results_zip = BytesIO()
+        with ZipFile(results_zip, 'w') as z:
             for idx, image in enumerate(images):
-                # buf = BytesIO()
-                image_path = f"mapped_image_{idx}_{name}.png"
+                image_path = f"mapped_image_{names[idx]}.png"
                 image.savefig(image_path, format='png')
-                z.write(filename=image_path)
+                z.write(image_path)
                 os.remove(image_path)
 
-        # Create a zip file with the CSVs
-        csvs_zip = BytesIO()
-        with ZipFile(csvs_zip, 'w') as z:
             for idx, csv in enumerate(csvs):
-                # print (type(csv))
-                csv_path = f"color_distribution_data_{idx}_{name}.csv"
+                csv_path = f"color_distribution_data_{names[idx]}.csv"
                 z.writestr(csv_path, csv)
-        #         os.remove(csv_path)
-        
-        # Download the images zip files
-        st.download_button(
-            label="Download Images zip file",
-            data=images_zip.getvalue(),
-            file_name="mapped_images.zip",
-            mime="application/zip"
-        )
 
-        # Download the csv zip files
+        # Download the zip file containing both images and CSVs
         st.download_button(
-            label="Download CSVs zip file",
-            data=csvs_zip.getvalue(),
-            file_name="csvs_files.zip",
-            mime="data/zip"
+            label="Download Results zip file",
+            data=results_zip.getvalue(),
+            file_name="results.zip",
+            mime="application/zip"
         )
 
 
