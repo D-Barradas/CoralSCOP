@@ -1,9 +1,9 @@
 import streamlit as st
-import numpy as np
-import cv2
 import matplotlib.pyplot as plt
 from streamlit_extras.switch_page_button import switch_page
-import sys
+import sys ,os
+from io import BytesIO
+from zipfile import ZipFile
 sys.path.append('../')
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 
@@ -91,8 +91,6 @@ def plot_compare_mapped_image_batch_mode(img1_rgb,color_map_RGB, idx):
     if 'Black' not in color_map_RGB.keys():
         color_map_RGB['Black'] = tuple([0,0,0])
 
-    print (color_map_RGB.keys())
-
     mapped_image , color_map , color_to_pixels = map_color_to_pixels(image=img1_rgb, color_map_RGB=color_map_RGB )
     del color_map['Black'] 
     del color_to_pixels['Black']
@@ -148,7 +146,56 @@ def plot_compare_mapped_image_batch_mode(img1_rgb,color_map_RGB, idx):
         key=idx
     )
 
+def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_RGB, idx):
+    # check if the black color is in the color map if not add it
+    if 'Black' not in color_map_RGB.keys():
+        color_map_RGB['Black'] = tuple([0, 0, 0])
 
+    mapped_image, color_map, color_to_pixels = map_color_to_pixels(image=img1_rgb, color_map_RGB=color_map_RGB)
+    del color_map['Black']
+    del color_to_pixels['Black']
+
+    color_counts, reverse_dict = count_pixel_colors(image=mapped_image, color_map_RGB=color_map)
+    lists = sorted(reverse_dict.items(), key=lambda kv: kv[1], reverse=True)
+
+    color_name, percentage_color_name = [], []
+    for c, p in lists:
+        if p > 1:
+            color_name.append(c)
+            percentage_color_name.append(p)
+
+    hex_colors_map = [RGB2HEX(color_map[key]) for key in color_name]
+
+    # Create a subplot grid with adjusted row widths and column widths
+    fig, axes = plt.subplots(1, 3, figsize=(15, 6))
+
+    # Add the original image, mapped image, and the bar chart to respective subplots
+    axes[0].imshow(img1_rgb)
+    axes[0].set_title("Original")
+    axes[0].axis('off')
+
+    axes[1].imshow(mapped_image)
+    axes[1].set_title("Mapped Image")
+    axes[1].axis('off')
+
+    axes[2].bar(color_name, percentage_color_name, color=hex_colors_map)
+    axes[2].set_title("Color Distribution")
+    axes[2].set_xlabel("Color code in chart")
+    axes[2].set_ylabel("Percentage of pixel on the image")
+
+    plt.tight_layout()
+
+    # Convert the color distribution data into a DataFrame
+    color_distribution_data = pd.DataFrame({
+        'Color Name': color_name,
+        'Percentage': percentage_color_name,
+        'Hex Color': hex_colors_map
+    })
+
+    # Convert the DataFrame to a CSV string
+    csv = color_distribution_data.to_csv(index=False).encode('utf-8')
+
+    return fig, csv
 
 
 def main():
@@ -160,8 +207,14 @@ def main():
 
     if st.button("Start Segmentation"):
         mask_generator = load_model()
+        progress_text = "Operation in progress. Please wait."
+        my_bar = st.progress(0, text=progress_text)
         for idx , uploaded_file in enumerate ( uploaded_files ) :
             print (idx)
+            name = uploaded_file.name.split(".")[0]
+
+            percent_complete = (idx + 1) / len(uploaded_files)
+            my_bar.progress(percent_complete , text=progress_text)
 
             custom_color_chart = st.session_state["custom_color_chart"]
             # print (custom_color_chart.keys() ,"for loop")
@@ -179,13 +232,67 @@ def main():
             # at this point we have the masks and the image crops 
             list_of_images, titles = process_images(image, masks)
             # now we will plot the images
-            plot_compare_mapped_image_batch_mode(list_of_images[0],custom_color_chart,idx)
+            # plot_compare_mapped_image_batch_mode(list_of_images[0],custom_color_chart,idx)
+            fig , csv = plot_compare_mapped_image_batch_mode_results_to_memory(list_of_images[0], custom_color_chart, idx)
+            # save fig and csv into a dictionary that dictionary will be saved in the session state
+            st.session_state[f"mapped_image_{idx}_{name}"] = fig 
+            st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
+
             if len(list_of_images) > 1:
-                st.write("Warning More than one coral image detected")
+                st.write(f"Warning More than one coral image detected on image:{name}")
                 # for img in list_of_images[1:]:
                 #     plot_compare_mapped_image_batch_mode(img,custom_color_chart,idx)
             # for img in list_of_images:
                 # plot_compare_mapped_image_batch_mode(img,custom_color_chart,idx)
+    # here there is a button to download the results
+    if st.button("Download Results"):
+        # lets create a loop to download all the images
+        # Lets put all the images in a list and create a zip file
+        # lets put all the csv in a list and create a zip file
+        # then we will download the zip files
+        images = []
+        csvs = []
+        for idx, uploaded_file in enumerate(uploaded_files):
+            name = uploaded_file.name.split(".")[0]
+            images.append(st.session_state[f"mapped_image_{idx}_{name}"])
+            csvs.append(st.session_state[f"color_distribution_data_{idx}_{name}"])
+
+        # Create a zip file with the images
+        images_zip = BytesIO()
+        with ZipFile(images_zip, 'w') as z:
+            for idx, image in enumerate(images):
+                # buf = BytesIO()
+                image_path = f"mapped_image_{idx}_{name}.png"
+                image.savefig(image_path, format='png')
+                z.write(filename=image_path)
+                os.remove(image_path)
+
+        # Create a zip file with the CSVs
+        csvs_zip = BytesIO()
+        with ZipFile(csvs_zip, 'w') as z:
+            for idx, csv in enumerate(csvs):
+                # print (type(csv))
+                csv_path = f"color_distribution_data_{idx}_{name}.csv"
+                z.writestr(csv_path, csv)
+        #         os.remove(csv_path)
+        
+        # Download the images zip files
+        st.download_button(
+            label="Download Images zip file",
+            data=images_zip.getvalue(),
+            file_name="mapped_images.zip",
+            mime="application/zip"
+        )
+
+        # Download the csv zip files
+        st.download_button(
+            label="Download CSVs zip file",
+            data=csvs_zip.getvalue(),
+            file_name="csvs_files.zip",
+            mime="data/zip"
+        )
+
+
 
             
 
