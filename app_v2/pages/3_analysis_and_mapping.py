@@ -100,79 +100,84 @@ if 'model_changed' not in st.session_state:
     st.session_state['model_changed'] = False
     st.session_state['segment'] = False
 
-# load the image
-coral_image = st.session_state["coral_img"]
 
-color_chart = st.session_state["custom_color_chart"]
-
-def switch_to_background_page():
+def switch_to_cropping():
     """Must be one of ['streamlit starting page', 'cropping color chart', 'separate color chart', 'analysis and mapping', 'rotation of the color chart']"""
 
-    want_to_contribute = st.button("Remove the background from image?")
+    want_to_contribute = st.button("Upload the image?")
     if want_to_contribute:
-        switch_page("remove the background")
+        switch_page("cropping color chart")
+
 
 
 
 def main():
-    # Display the image
-    st.image(coral_image, caption='Coral Image', use_column_width=True)
+    if "coral_img" not in st.session_state and "custom_color_chart" not in st.session_state:
+        st.write("Please go to page 1 to upload the image and page 2 to create the custom color chart")
+        switch_to_cropping()
 
-    # Remove the background with DL - optional
-    # switch_to_background_page()
+    else:
+        st.write("Coral image and custom color chart are already in session state")
 
-    # Model selection with on_change callback
-    model_option = st.selectbox(
-        'We are using CoralScope model', 
-        ('Model_B'),
-        key='model_option',
-        on_change=on_model_change  # Call on_model_change when the selection changes
-    )
+        coral_image = st.session_state["coral_img"]
 
-    if  st.button('Segment Image'):
-        st.session_state['segment'] = True
-        # if st.session_state.get('segment'):
-        masks = load_model_and_segment(coral_image, model_option)
-        # print(type(masks),masks)
-        list_of_images, titles = process_images(image=coral_image, masks=masks)
-        
-        # Create the plot and store it in session state
-        create_plot(coral_image, masks)
+        color_chart = st.session_state["custom_color_chart"]
+        # Display the image
+        st.image(coral_image, caption='Coral Image', use_column_width=True)
 
-        # Save the segmented images and titles in session state
-        st.session_state['segmented_images'] = list_of_images
-        st.session_state['titles'] = titles
 
-        # Initial selection
-        st.session_state['selected_index'] = 0
+        # Model selection with on_change callback
+        model_option = st.selectbox(
+            'We are using CoralScope model', 
+            ('Model_B'),
+            key='model_option',
+            on_change=on_model_change  # Call on_model_change when the selection changes
+        )
 
-    if st.session_state.get('segment'):
-        if 'plot_image' in st.session_state:
-            # Display the stored plot
-            st.image(st.session_state['plot_image'], caption='Original Image with Annotations')
+        if  st.button('Segment Image'):
+            st.session_state['segment'] = True
+            # if st.session_state.get('segment'):
+            masks = load_model_and_segment(coral_image, model_option)
+            # print(type(masks),masks)
+            list_of_images, titles = process_images(image=coral_image, masks=masks)
+            
+            # Create the plot and store it in session state
+            create_plot(coral_image, masks)
 
-        if 'segmented_images' in st.session_state:
-            # User selects from the segmented images
-            selected_index = st.selectbox('Select a segmented image', 
-                                          range(len(st.session_state['segmented_images'])),
-                                          key='selected_image_index')
-        
-            # Display the selected segmented image
-            st.image(st.session_state['segmented_images'][selected_index], 
-                     caption=f'Image {selected_index}',
-                     use_column_width=True)
+            # Save the segmented images and titles in session state
+            st.session_state['segmented_images'] = list_of_images
+            st.session_state['titles'] = titles
 
-            # Button to trigger the histogram plot
-            if st.button('Analyze colors in the selected image'):
-                st.session_state['plot_histogram'] = True
-        
-            # Check if the histogram should be displayed
-            if st.session_state.get('plot_histogram'):
-                display_histogram(selected_index)
-                
-                OcrAnalysis.plot_custom_colorchart(color_chart)
+            # Initial selection
+            st.session_state['selected_index'] = 0
 
-                st.session_state['plot_histogram'] = False  # Reset the flag
+        if st.session_state.get('segment'):
+            if 'plot_image' in st.session_state:
+                # Display the stored plot
+                st.image(st.session_state['plot_image'], caption='Original Image with Annotations')
+
+            if 'segmented_images' in st.session_state:
+                # User selects from the segmented images
+                selected_index = st.selectbox('Select a segmented image', 
+                                            range(len(st.session_state['segmented_images'])),
+                                            key='selected_image_index')
+            
+                # Display the selected segmented image
+                st.image(st.session_state['segmented_images'][selected_index], 
+                        caption=f'Image {selected_index}',
+                        use_column_width=True)
+
+                # Button to trigger the histogram plot
+                if st.button('Analyze colors in the selected image'):
+                    st.session_state['plot_histogram'] = True
+            
+                # Check if the histogram should be displayed
+                if st.session_state.get('plot_histogram'):
+                    display_histogram(selected_index)
+                    
+                    OcrAnalysis.plot_custom_colorchart(color_chart)
+
+                    st.session_state['plot_histogram'] = False  # Reset the flag
             
 
 
