@@ -319,7 +319,6 @@ def find_optimal_placement(bboxes, new_bbox_area):
 
     return optimal_placement
 
-import numpy as np
 
 def place_copy(bounding_boxes):
     """Places a copy of the first bounding box at the average distance of the last bounding box, adding the distance to the x-axis.
@@ -365,7 +364,12 @@ def place_copy(bounding_boxes):
 
     return bounding_boxes
 
+def switch_to_cropping():
+    """Must be one of ['streamlit starting page', 'cropping color chart', 'separate color chart', 'analysis and mapping', 'rotation of the color chart']"""
 
+    want_to_contribute = st.button("Upload the image?")
+    if want_to_contribute:
+        switch_page("cropping color chart")
 
 def switch_to_rotation_page():
     """Must be one of ['streamlit starting page', 'cropping color chart', 'separate color chart', 'analysis and mapping', 'rotation of the color chart']"""
@@ -381,143 +385,212 @@ def switch_to_next():
     if want_to_contribute:
         switch_page("analysis and mapping")
 
+def switch_to_manual():
+    """Must be one of ['streamlit starting page', 'cropping color chart', 'separate color chart', 'analysis and mapping', 'rotation of the color chart']"""
+
+    want_to_contribute = st.button("Go next phase?")
+    if want_to_contribute:
+        switch_page("manual selection of colors")
+
+
+
 def main():
-    image = st.session_state["chart_img"]
-    for cardinalities in ["up", "down", "left" ,"right" ]:
-        if cardinalities not in st.session_state:
-            st.session_state[cardinalities] = []
+    if "chart_img" not in st.session_state:
+
+        st.write("Please go to page 1 to upload the image")
+        switch_to_cropping()
+    else:
+        st.write("Color chart image is already in session state")
+
+        image = st.session_state["chart_img"]
+        for cardinalities in ["up", "down", "left" ,"right" ]:
+            if cardinalities not in st.session_state:
+                st.session_state[cardinalities] = []
 
 
-    switch_to_rotation_page()
-    selected_regions = define_region_selection(image)
-    # print (st.session_state.keys()  )
-    # # print (st.session_state)
-    # keys_from_state = [ key for key in st.session_state.keys() ]
-    # print (keys_from_state)
-    # # if len ( keys_from_state ) == 5 : 
-    # if len(st.session_state.keys()) != 5:
-    #     print (st.session_state.keys()  )
-    # print (selected_regions)
-    list_of_images =[]
-    if st.button("process crops"):
-        dictionary_of_crops, dictionary_of_greys = resize_and_rotate_image(local_image=image,boxes=selected_regions)
-        list_of_images=[item for key,item in dictionary_of_crops.items()]
-        list_of_images_grey=[item for key,item in dictionary_of_greys.items()]
-        
-        st.image(list_of_images)
-        # st.image(list_of_images_grey)
-        st.session_state["color_crops"] = list_of_images
-        st.session_state["grey_crops"] = list_of_images_grey
-        
-    if st.button("Apply tilt correction"):
-        dictionary_of_crops, dictionary_of_greys = resize_and_rotate_image(local_image=image,boxes=selected_regions)
+        switch_to_rotation_page()
+        switch_to_manual()
+        selected_regions = define_region_selection(image)
 
-        # this is the dictionary of crops in colors
-        dictionary_of_crops = apply_correct_tilt(dictionary_of_crops)
-        list_of_images=[item for key,item in dictionary_of_crops.items()]
-        st.image(list_of_images)
-        st.session_state["color_crops"] = list_of_images
-        # this is the dictionary of crops in grey
-        # dictionary_of_greys = apply_correct_tilt(dictionary_of_greys)
-        # list_of_images_grey=[item for key,item in dictionary_of_greys.items()]
-        # st.session_state["grey_crops"] = list_of_images_grey
-
-
-
-
-    if st.button("Detect Writing"):
-        reader = easyocr.Reader(["en"],gpu=True) # this needs to run only once to load the model into memory
-        my_personal_chart = {}
-        # print (st.session_state.get("color_crops"))
-        for index , color_chart_segment in enumerate ( st.session_state.get("color_crops"))  :
+        list_of_images =[]
+        if st.button("process crops"):
+            dictionary_of_crops, dictionary_of_greys = resize_and_rotate_image(local_image=image,boxes=selected_regions)
+            list_of_images=[item for key,item in dictionary_of_crops.items()]
+            list_of_images_grey=[item for key,item in dictionary_of_greys.items()]
             
-            result = reader.readtext(color_chart_segment)
-            bboxes, text_list = OcrAnalysis.get_bounding_boxes(result)
-            # print (len(bboxes), text_list)
-            ## here there should be a check
-            # if len(bboxes) != 6 :
-            # check the index number of the color_chart_segment missing 
-            # match with the new keys and fill the gap 
-            # we could fill the gap with the ideal color chart since is the usual dark colors that are missing
+            st.image(list_of_images)
+            # st.image(list_of_images_grey)
+            st.session_state["color_crops"] = list_of_images
+            st.session_state["grey_crops"] = list_of_images_grey
+        
+        if st.button("Apply tilt correction"):
+            dictionary_of_crops, dictionary_of_greys = resize_and_rotate_image(local_image=image,boxes=selected_regions)
 
+            # this is the dictionary of crops in colors
+            dictionary_of_crops = apply_correct_tilt(dictionary_of_crops)
+            list_of_images=[item for key,item in dictionary_of_crops.items()]
+            st.image(list_of_images)
+            st.session_state["color_crops"] = list_of_images
+            # this is the dictionary of crops in grey
+            # dictionary_of_greys = apply_correct_tilt(dictionary_of_greys)
+            # list_of_images_grey=[item for key,item in dictionary_of_greys.items()]
+            # st.session_state["grey_crops"] = list_of_images_grey
 
-            if len(bboxes) == 6  : ## meaning is equal to 6
-                ## replace the text_list with the custom_chart_key_code_and_order 
-                text_list = custom_chart_key_code_and_order[index]
-            else :
-                st.write(f"Warning can't detect all writting for : {custom_chart_key_code_and_order[index]} \n Trying with the grayscale")
-                # list_of_images_grey[index]
-                result = reader.readtext(st.session_state["grey_crops"][index])
+        if st.button("Build the Color Chart"):
+            reader = easyocr.Reader(["en"],gpu=True)
+            my_personal_chart = {}
+            my_dictionary_to_check_number_of_boxes = {}
+            for index , color_chart_segment in enumerate ( st.session_state.get("color_crops"))  :
+                result = reader.readtext(color_chart_segment)
                 bboxes, text_list = OcrAnalysis.get_bounding_boxes(result)
+                if len(bboxes) == 6  :
+                    text_list = custom_chart_key_code_and_order[index]
+                    my_dictionary_to_check_number_of_boxes[index]  = {"bboxes":bboxes, 
+                                                                    "text_list": text_list, 
+                                                                    #   "color_chart_segment":color_chart_segment, 
+                                                                    "num_of_boxes":len(bboxes)}
+            try :
+                # check that my_dictionary_to_check_number_of_boxes has 4 keys
+                if len(my_dictionary_to_check_number_of_boxes) == 4:
+                    for index , color_chart_segment in enumerate ( st.session_state.get("color_crops"))  :
+                        bboxes, text_list = my_dictionary_to_check_number_of_boxes[index]["bboxes"], my_dictionary_to_check_number_of_boxes[index]["text_list"] 
+                        for t,bbox in zip(text_list,bboxes):
+                            cropped_colors = OcrAnalysis.get_pixels_above_bbox(bbox=bbox,image=color_chart_segment)
+                            df_color = get_colors_df(image=cropped_colors, number_of_colors=1, show_chart=False)
+                            my_personal_chart[t]=tuple( round(x) for x in df_color["rgb_colors"][0].tolist() )
 
-                ## this is for debugging
-                # print (len(bboxes), text_list, "Trying with the grayscale")
-                # print(bboxes[0][2] ,bboxes[0][0], bboxes[0][3], bboxes[0][1])
-                # for i in range(len(bboxes)):
-                #     for j in range(i + 1, len(bboxes)):
-                #         idx_rest = j -i  
-                #         if idx_rest == 1 :
-                #             distance = calculate_distance(bboxes[i], bboxes[j])
-                #             print(f"Distance between bounding boxes {i} and {j}: {distance}")
+                    my_personal_chart["Black"] = tuple([0,0,0])
+                    my_personal_chart["White"] = tuple([255,255,255])
 
-                # Place a box next to the last 
-                bboxes = place_copy(bounding_boxes=bboxes)
-                text_list.append ("FAKE")
-                text_list = custom_chart_key_code_and_order[index]
+                    st.session_state["custom_color_chart"] = my_personal_chart
+                    OcrAnalysis.plot_custom_colorchart(my_personal_chart)
+                else:
+                    dictionary_size = len(my_dictionary_to_check_number_of_boxes.keys())
+                    st.write(f"Warning: Only {dictionary_size} color segments with 6 boxes detected")
+                    # from my_dictionary_to_check_number_of_boxes get the index of the missing color chart segment
+                    # and then use the bboxes to fill the gap
+                    missing = [key for key in range(4) if key not in my_dictionary_to_check_number_of_boxes.keys()]
+                    exising = [key for key in range(4) if key in my_dictionary_to_check_number_of_boxes.keys()]
+                    for index in missing:
+                        bboxes = my_dictionary_to_check_number_of_boxes[exising[0]]["bboxes"]
+                        text_list = custom_chart_key_code_and_order[index]
+                        my_dictionary_to_check_number_of_boxes[index]  = {"bboxes":bboxes, 
+                                                                    "text_list": text_list, 
+                                                                    #   "color_chart_segment":color_chart_segment, 
+                                                                    "num_of_boxes":len(bboxes)}
+                    # and now we can build the color chart
+                    for index , color_chart_segment in enumerate ( st.session_state.get("color_crops"))  :
+                        bboxes, text_list = my_dictionary_to_check_number_of_boxes[index]["bboxes"], my_dictionary_to_check_number_of_boxes[index]["text_list"] 
+                        for t,bbox in zip(text_list,bboxes):
+                            cropped_colors = OcrAnalysis.get_pixels_above_bbox(bbox=bbox,image=color_chart_segment)
+                            df_color = get_colors_df(image=cropped_colors, number_of_colors=1, show_chart=False)
+                            my_personal_chart[t]=tuple( round(x) for x in df_color["rgb_colors"][0].tolist() )
 
+                    my_personal_chart["Black"] = tuple([0,0,0])
+                    my_personal_chart["White"] = tuple([255,255,255])
 
+                    st.session_state["custom_color_chart"] = my_personal_chart
+                    OcrAnalysis.plot_custom_colorchart(my_personal_chart)
 
-
-    
-
-
-
-
-                # # Calculate the area of one of the existing bounding boxes
-                # existing_bbox_area = (bboxes[0][2] - bboxes[0][0]) * (bboxes[0][3] - bboxes[0][1])
-
-                # # Find the optimal placement for the new bounding box
-                # new_bbox = find_optimal_placement(bboxes, existing_bbox_area)
-
-                # # # Add the new bounding box to the list of existing bounding boxes
-                # bboxes.append(new_bbox)
-                # text_list.append ("A0")
-
-                # # Print the bounding boxes
-                # for bbox in bboxes:
-                #     print(bbox)
-
-
-            for t,bbox in zip(text_list,bboxes): 
-                # print (t, bbox,"zip")
-                cropped_colors = OcrAnalysis.get_pixels_above_bbox(bbox=bbox,image=color_chart_segment)
-                df_color = get_colors_df(image=cropped_colors, number_of_colors=1, show_chart=False)
-                # print (t,df_color["rgb_colors"][0].tolist())
-                my_personal_chart[t]=tuple( round(x) for x in df_color["rgb_colors"][0].tolist() )
-
-        # print (my_personal_chart.keys(), len(my_personal_chart.keys()))
-        if my_personal_chart:
-
-            new_keys = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6',
-                        'D1', 'D2', 'D3', 'D4', 'D5', 'D6',
-                        'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 
-                        'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 
-                         ]
-            # print (len(new_keys) , len(my_personal_chart.keys())) 
-            if len(new_keys) == len(my_personal_chart.keys()):
-                my_personal_chart = {new_keys[i]: my_personal_chart[old_key] for i, old_key in enumerate(my_personal_chart)}
-                my_personal_chart["Black"] = tuple([0,0,0])
-                my_personal_chart["White"] = tuple([255,255,255])
-                st.session_state["custom_color_chart"] = my_personal_chart
-                OcrAnalysis.plot_custom_colorchart(my_personal_chart)
-            else :
-                st.write("custom chart not complete")
-                #print (f"not complete:{f_name}")
-                # incomplete_to_fill.append(f_name)
+            except:
+                st.write ("Not sufficient boxes detected")
+                st.write ("Switching to the manual selection page")
+                switch_to_manual()
 
 
-    # go to the next page if done 
-    switch_to_next()
+        # if st.button("Detect Writing"):
+        #     reader = easyocr.Reader(["en"],gpu=True) # this needs to run only once to load the model into memory
+        #     my_personal_chart = {}
+        #     # print (st.session_state.get("color_crops"))
+        #     for index , color_chart_segment in enumerate ( st.session_state.get("color_crops"))  :
+                
+        #         result = reader.readtext(color_chart_segment)
+        #         bboxes, text_list = OcrAnalysis.get_bounding_boxes(result)
+        #         # print (len(bboxes), text_list)
+        #         ## here there should be a check
+        #         # if len(bboxes) != 6 :
+        #         # check the index number of the color_chart_segment missing 
+        #         # match with the new keys and fill the gap 
+        #         # we could fill the gap with the ideal color chart since is the usual dark colors that are missing
+
+
+        #         if len(bboxes) == 6  : ## meaning is equal to 6
+        #             ## replace the text_list with the custom_chart_key_code_and_order 
+        #             text_list = custom_chart_key_code_and_order[index]
+        #         else :
+        #             st.write(f"Warning can't detect all writting for : {custom_chart_key_code_and_order[index]} \n Trying with the grayscale")
+        #             # list_of_images_grey[index]
+        #             result = reader.readtext(st.session_state["grey_crops"][index])
+        #             bboxes, text_list = OcrAnalysis.get_bounding_boxes(result)
+
+        #             ## this is for debugging
+        #             # print (len(bboxes), text_list, "Trying with the grayscale")
+        #             # print(bboxes[0][2] ,bboxes[0][0], bboxes[0][3], bboxes[0][1])
+        #             # for i in range(len(bboxes)):
+        #             #     for j in range(i + 1, len(bboxes)):
+        #             #         idx_rest = j -i  
+        #             #         if idx_rest == 1 :
+        #             #             distance = calculate_distance(bboxes[i], bboxes[j])
+        #             #             print(f"Distance between bounding boxes {i} and {j}: {distance}")
+
+        #             # Place a box next to the last 
+        #             bboxes = place_copy(bounding_boxes=bboxes)
+        #             text_list.append ("FAKE")
+        #             text_list = custom_chart_key_code_and_order[index]
+
+
+
+
+        
+
+
+
+
+        #             # # Calculate the area of one of the existing bounding boxes
+        #             # existing_bbox_area = (bboxes[0][2] - bboxes[0][0]) * (bboxes[0][3] - bboxes[0][1])
+
+        #             # # Find the optimal placement for the new bounding box
+        #             # new_bbox = find_optimal_placement(bboxes, existing_bbox_area)
+
+        #             # # # Add the new bounding box to the list of existing bounding boxes
+        #             # bboxes.append(new_bbox)
+        #             # text_list.append ("A0")
+
+        #             # # Print the bounding boxes
+        #             # for bbox in bboxes:
+        #             #     print(bbox)
+
+
+        #         for t,bbox in zip(text_list,bboxes): 
+        #             # print (t, bbox,"zip")
+        #             cropped_colors = OcrAnalysis.get_pixels_above_bbox(bbox=bbox,image=color_chart_segment)
+        #             df_color = get_colors_df(image=cropped_colors, number_of_colors=1, show_chart=False)
+        #             # print (t,df_color["rgb_colors"][0].tolist())
+        #             my_personal_chart[t]=tuple( round(x) for x in df_color["rgb_colors"][0].tolist() )
+
+        #     # print (my_personal_chart.keys(), len(my_personal_chart.keys()))
+        #     if my_personal_chart:
+
+        #         new_keys = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6',
+        #                     'D1', 'D2', 'D3', 'D4', 'D5', 'D6',
+        #                     'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 
+        #                     'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 
+        #                      ]
+        #         # print (len(new_keys) , len(my_personal_chart.keys())) 
+        #         if len(new_keys) == len(my_personal_chart.keys()):
+        #             my_personal_chart = {new_keys[i]: my_personal_chart[old_key] for i, old_key in enumerate(my_personal_chart)}
+        #             my_personal_chart["Black"] = tuple([0,0,0])
+        #             my_personal_chart["White"] = tuple([255,255,255])
+        #             st.session_state["custom_color_chart"] = my_personal_chart
+        #             OcrAnalysis.plot_custom_colorchart(my_personal_chart)
+        #         else :
+        #             st.write("custom chart not complete")
+        #             #print (f"not complete:{f_name}")
+        #             # incomplete_to_fill.append(f_name)
+
+
+        # go to the next page if done 
+        switch_to_next()
 
 
 # Streamlit app execution
