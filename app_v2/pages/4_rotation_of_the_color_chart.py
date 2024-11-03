@@ -57,6 +57,7 @@ def is_color_chart_in_session_state():
 
 # ... (code to display the rotated image)
 def main():
+    st.title("Rotation of the color chart")
     if "chart_img" in st.session_state:
         st.title("Rotation of the color chart")
         st.markdown("In this page, you can rotate the color chart to the desired angle.")

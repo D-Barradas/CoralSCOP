@@ -139,31 +139,46 @@ def show_and_draw_boundingboxes(image, image_option):
     #     avg_color = np.array(cropped_image).mean(axis=(0, 1))
     #     st.color_picker(f"Color from box {box}", value=f"#{int(avg_color[0]):02x}{int(avg_color[1]):02x}{int(avg_color[2]):02x}")
 
+def switch_to_cropping():
+    """Must be one of ['streamlit starting page', 'cropping color chart', 'separate color chart', 'analysis and mapping', 'rotation of the color chart']"""
 
+    want_to_contribute = st.button("Upload the image?")
+    if want_to_contribute:
+        switch_page("cropping color chart")
 
 # else:
 #     st.write("No image found in the selected session state.")
 
+
+
+
+
+
 def main():
-    image, image_option = select_image()
-    show_and_draw_boundingboxes(image ,image_option)
-    if st.button("Create Custom Color Chart"):
-        my_personal_chart = {}
+    st.title("Manual Selection of Colors")
+    if "color_crops" in st.session_state:
+        image, image_option = select_image()
+        show_and_draw_boundingboxes(image ,image_option)
+        if st.button("Create Custom Color Chart"):
+            my_personal_chart = {}
 
-        for idx, option in enumerate ( st.session_state["bounding_boxes"].keys() ):
-            print(idx,option)
-            bboxes = st.session_state["bounding_boxes"][option]
-            color_chart_segment = st.session_state["color_crops"][idx]
-            print (color_chart_segment.shape)
-            create_the_custom_color_chart_locally(bboxes=bboxes,color_chart_segment=color_chart_segment,image_option=option,dictionary=my_personal_chart)
+            for idx, option in enumerate ( st.session_state["bounding_boxes"].keys() ):
+                print(idx,option)
+                bboxes = st.session_state["bounding_boxes"][option]
+                color_chart_segment = st.session_state["color_crops"][idx]
+                print (color_chart_segment.shape)
+                create_the_custom_color_chart_locally(bboxes=bboxes,color_chart_segment=color_chart_segment,image_option=option,dictionary=my_personal_chart)
 
-        my_personal_chart["Black"] = tuple([0,0,0])
-        my_personal_chart["White"] = tuple([255,255,255])
-        OcrAnalysis.plot_custom_colorchart(my_personal_chart)
-        st.session_state["custom_color_chart"] = my_personal_chart
+            my_personal_chart["Black"] = tuple([0,0,0])
+            my_personal_chart["White"] = tuple([255,255,255])
+            OcrAnalysis.plot_custom_colorchart(my_personal_chart)
+            st.session_state["custom_color_chart"] = my_personal_chart
 
-    switch_to_next()
-
+        switch_to_next()
+    else:
+        st.write("No image found in the selected session state.")
+        st.write("Please go to page 1 to upload the image and select the color chart")
+        switch_to_cropping()
 
 
 
