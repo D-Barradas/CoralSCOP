@@ -199,6 +199,7 @@ def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_R
 
 
 def main():
+    st.title("Batch Mode")
     is_color_chart_in_session_state()
     uploaded_files = st.file_uploader("Choose the images ...", type=["bmp", "jpg", "jpeg", "png", "svg"], accept_multiple_files=True)
     for uploaded_file in uploaded_files:
