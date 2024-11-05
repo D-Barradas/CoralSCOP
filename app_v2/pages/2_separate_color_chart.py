@@ -1,8 +1,8 @@
 import streamlit as st
-from PIL import Image, UnidentifiedImageError
-import io
-import requests
-import os
+# from PIL import Image, UnidentifiedImageError
+# import io
+# import requests
+# import os
 import cv2
 # from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 
@@ -409,7 +409,7 @@ def main():
 
 
         switch_to_rotation_page()
-        switch_to_manual()
+        # switch_to_manual()
         selected_regions = define_region_selection(image)
 
         list_of_images =[]
