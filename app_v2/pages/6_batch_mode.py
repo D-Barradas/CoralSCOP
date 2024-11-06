@@ -146,7 +146,7 @@ def plot_compare_mapped_image_batch_mode(img1_rgb,color_map_RGB, idx):
         key=idx
     )
 
-def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_RGB, idx):
+def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_RGB):
     # check if the black color is in the color map if not add it
     if 'Black' not in color_map_RGB.keys():
         color_map_RGB['Black'] = tuple([0, 0, 0])
@@ -184,6 +184,8 @@ def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_R
     axes[2].set_ylabel("Percentage of pixel on the image")
 
     plt.tight_layout()
+    # close the plot
+    plt.close()
 
     # Convert the color distribution data into a DataFrame
     color_distribution_data = pd.DataFrame({
@@ -201,6 +203,8 @@ def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_R
 def main():
     st.title("Batch Mode")
     is_color_chart_in_session_state()
+    images = []
+    csvs = []
     uploaded_files = st.file_uploader("Choose the images ...", type=["bmp", "jpg", "jpeg", "png", "svg"], accept_multiple_files=True)
     for uploaded_file in uploaded_files:
         # bytes_data = uploaded_file.read()
@@ -210,12 +214,7 @@ def main():
         mask_generator = load_model()
         progress_text = "Operation in progress. Please wait."
         my_bar = st.progress(0, text=progress_text)
-        for idx , uploaded_file in enumerate ( uploaded_files ) :
-            print (idx)
-            name = uploaded_file.name.split(".")[0]
-
-            percent_complete = (idx + 1) / len(uploaded_files)
-            
+        for idx_f,uploaded_file in enumerate (uploaded_files)  :
 
             custom_color_chart = st.session_state["custom_color_chart"]
             # print (custom_color_chart.keys() ,"for loop")
@@ -232,16 +231,36 @@ def main():
             masks = mask_generator.generate(image)
             # at this point we have the masks and the image crops 
             list_of_images, titles = process_images(image, masks)
-            # now we will plot the images
-            # plot_compare_mapped_image_batch_mode(list_of_images[0],custom_color_chart,idx)
-            fig , csv = plot_compare_mapped_image_batch_mode_results_to_memory(list_of_images[0], custom_color_chart, idx)
-            # save fig and csv into a dictionary that dictionary will be saved in the session state
-            st.session_state[f"mapped_image_{idx}_{name}"] = fig 
-            st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
 
             if len(list_of_images) > 1:
                 st.write(f"Warning More than one coral image detected on image:{name}")
+
+
+            # if len(list_of_images) > 1: # we have to change this for the for look 
+            for idx , img in enumerate ( list_of_images) : 
+                # relocate the idx to the for loop here and add the name of the image
+                # relocate also the st.session_state[f"mapped_image_{idx}_{name}"] = fig
+                # relocate also the st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
+                # we have to save the names of the images in a list to use it on the download button
+
+                name = uploaded_file.name.split(".")[0]
+
+                # now we will plot the images
+                # plot_compare_mapped_image_batch_mode(list_of_images[0],custom_color_chart,idx)
+                fig , csv = plot_compare_mapped_image_batch_mode_results_to_memory( img , custom_color_chart)
+                # save fig and csv into a dictionary that dictionary will be saved in the session state
+                st.session_state[f"mapped_image_{idx}_{name}"] = fig 
+                st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
+
+                images.append(st.session_state[f"mapped_image_{idx}_{name}"])
+                csvs.append(st.session_state[f"color_distribution_data_{idx}_{name}"])
+
+
+
+                # for img in list_of_images[1:]:
+                #     plot_compare_mapped_image_batch_mode_results_to_memory(img, custom_color_chart , idx)
             # show the progress bar here
+            percent_complete = (idx_f + 1) / len(uploaded_files)
             my_bar.progress(percent_complete , text=progress_text)
                 # for img in list_of_images[1:]:
                 #     plot_compare_mapped_image_batch_mode(img,custom_color_chart,idx)
@@ -250,26 +269,28 @@ def main():
     # here there is a button to download the results
     if st.button("Process Results"):
         # Create lists to store images and CSVs
-        images = []
-        csvs = []
-        names = []
-        for idx, uploaded_file in enumerate(uploaded_files):
-            name = uploaded_file.name.split(".")[0]
-            names.append(name)
-            images.append(st.session_state[f"mapped_image_{idx}_{name}"])
-            csvs.append(st.session_state[f"color_distribution_data_{idx}_{name}"])
+        # images = []
+        # csvs = []
+        # names = []
+        # for idx, uploaded_file in enumerate(uploaded_files):
+        #     name = uploaded_file.name.split(".")[0]
+        #     names.append(name)
+        #     images.append(st.session_state[f"mapped_image_{idx}_{name}"])
+        #     csvs.append(st.session_state[f"color_distribution_data_{idx}_{name}"])
 
         # Create a zip file with the images and CSVs
         results_zip = BytesIO()
         with ZipFile(results_zip, 'w') as z:
             for idx, image in enumerate(images):
-                image_path = f"mapped_image_{names[idx]}.png"
+                # image_path = f"mapped_image_{names[idx]}.png"
+                image_path = f"{image}.png"
                 image.savefig(image_path, format='png')
                 z.write(image_path)
                 os.remove(image_path)
 
             for idx, csv in enumerate(csvs):
-                csv_path = f"color_distribution_data_{names[idx]}.csv"
+                csv_path = f"{csv}.csv"
+                # csv_path = f"color_distribution_data_{names[idx]}.csv"
                 z.writestr(csv_path, csv)
 
         # Download the zip file containing both images and CSVs
