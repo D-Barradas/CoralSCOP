@@ -424,6 +424,8 @@ def count_pixel_colors(image, color_map_RGB):
 
     # get the mapped image 
 def plot_compare_mapped_image(img1_rgb,color_map_RGB):
+    if 'Black' not in color_map_RGB.keys():
+        color_map_RGB['Black'] = tuple([0, 0, 0])
 
     mapped_image , color_map , color_to_pixels = map_color_to_pixels(image=img1_rgb, color_map_RGB=color_map_RGB )
     del color_map['Black'] 
