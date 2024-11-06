@@ -244,6 +244,24 @@ def main():
             st.session_state["coral_img"] = dictionary_of_crops["coral"]
             st.session_state["chart_img"] = dictionary_of_crops["chart"]
 
+    if st.button("Load your color chart text file"):
+        # Load the color chart image that is a text file
+        uploaded_file = st.file_uploader("Choose a text file...", type=["txt"])
+        if uploaded_file is not None:
+            # Load the text file
+            # the file is a text file with the color chart
+            my_personal_chart_file = uploaded_file.read()
+            # loop over the rows of the file and store it on a dictionary
+            my_personal_chart = {}
+            for row in my_personal_chart_file:
+                key, value = row.split(":")
+                my_personal_chart[key] = value
+            st.session_state["custom_color_chart"] = my_personal_chart
+            OcrAnalysis.plot_custom_colorchart(my_personal_chart)
+
+
+
+            # r
 
         # with st.container():
         #     lcol, mcol, rcol = st.columns(3)
