@@ -14,6 +14,7 @@ st.set_page_config(page_title="Mapping the custom color chart", page_icon="📊"
 
 st.markdown("# Mapping the custom color chart")
 st.sidebar.header("")
+
 st.write(
     """This part is used to segment and create a mapped image"""
 )
@@ -112,7 +113,7 @@ def switch_to_cropping():
 
 
 def main():
-    if "coral_img" not in st.session_state and "custom_color_chart" not in st.session_state:
+    if "coral_img" not in st.session_state or "custom_color_chart" not in st.session_state:
         st.write("Please go to page 1 to upload the image and page 2 to create the custom color chart")
         switch_to_cropping()
 
