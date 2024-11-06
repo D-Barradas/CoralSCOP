@@ -1,6 +1,6 @@
 import streamlit as st
 # from PIL import Image, UnidentifiedImageError
-# import io
+from io import BytesIO
 # import requests
 # import os
 import cv2
@@ -17,7 +17,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 st.set_page_config(page_title="Separate Color from the Chart", page_icon="📊")
 
 st.markdown("# Separate Color from the Chart")
-st.sidebar.header("Select color chast ")
+st.sidebar.header("Select color chart regions")
+
 st.write(
     """ The color chart is on different rotations This will produce a custom color chart from the selection """
 )
@@ -497,6 +498,37 @@ def main():
                 st.write ("Switching to the manual selection page")
                 switch_to_manual()
 
+        if st.button("Save the color chart for later?"):
+            # safe my_personal_chart to a file
+            my_personal_chart = st.session_state["custom_color_chart"] 
+
+            color_chart_str = "\n".join([f"{key}: {value}" for key, value in my_personal_chart.items()])
+
+            # Create a BytesIO object and write the string to it
+            color_chart_bytes = BytesIO()
+            color_chart_bytes.write(color_chart_str.encode())
+            color_chart_bytes.seek(0)
+
+            st.write("Color chart saved to custom_color_chart.txt")
+            # Download the file
+            st.download_button(
+                label="Download the color chart",
+                data=color_chart_bytes,
+                file_name="custom_color_chart.txt",
+                mime="text/plain",
+                key="download_button_color_chart",
+            )
+            os.remove("custom_color_chart.txt")
+     
+            # download the file
+            # st.download_button(
+            #     label="Download the color chart",
+            #     data= ,
+            #     file_name="custom_color_chart.txt",
+            #     mime="text/plain",
+            #     key="download_button_color_chart",
+            # )
+            
 
         # if st.button("Detect Writing"):
         #     reader = easyocr.Reader(["en"],gpu=True) # this needs to run only once to load the model into memory
