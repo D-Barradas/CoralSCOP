@@ -47,4 +47,4 @@ SHELL ["conda", "run", "-n", "coral", "/bin/bash", "-c"]
 
 # The command to run the app
 ENTRYPOINT ["conda", "run", "-n", "coral"]
-CMD ["streamlit", "run", "streamlit_starting_page.py"]
+CMD ["streamlit", "run", "app.py"]
