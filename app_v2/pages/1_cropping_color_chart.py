@@ -1,8 +1,9 @@
 import streamlit as st
-from PIL import Image, UnidentifiedImageError
-import io
-import requests
-import os
+# from PIL import Image, UnidentifiedImageError
+# # import io
+# # import requests
+# # import os
+import pandas as pd
 import cv2
 # from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 from streamlit_extras.image_selector import image_selector, show_selection
@@ -12,11 +13,11 @@ from streamlit_extras.switch_page_button import switch_page
 
 st.set_page_config(page_title="Cropping Image", page_icon="🌍")
 
-st.markdown("# Create a cropped")
-st.sidebar.header("Create crop")
-st.write(
-    """This Should crop and same the color from the color chart."""
-)
+# st.markdown("# Create a cropped")
+# st.sidebar.header("Create crop")
+# st.write(
+#     """This Should crop and same the color from the color chart."""
+# )
 
 with open("load_functions.py") as f:
     exec(f.read())
@@ -126,15 +127,16 @@ def select_coral_and_color_chart_area(image):
                 st.write("Color Chart:", st.session_state.get("chart", "Not saved"))
 
 
-                print (len(st.session_state), type(st.session_state))
+                # print (len(st.session_state), type(st.session_state))
 
-                if len(st.session_state) == 3:
+                # if len(st.session_state) == 3:
+                if st.session_state["coral"] and st.session_state["chart"]:
                     st.write("Coral and Chart selected.")
                     selected_regions = { 
-                    "coral":st.session_state["coral"],
-                    "chart":st.session_state["chart"]
+                        "coral":st.session_state["coral"],
+                        "chart":st.session_state["chart"]
 
-                    }
+                        }
     return selected_regions
 
 def get_coral_and_chart_image(local_image , boxes):
@@ -192,29 +194,34 @@ def switch_to_next():
 
 
 
-def _reset(key: str) -> None:
-    if key == "all":
-        st.session_state["coral_img"] = []
-        st.session_state["chart_img"] = []
+# def _reset(key: str) -> None:
+#     if key == "all":
+#         st.session_state["coral_img"] = []
+#         st.session_state["chart_img"] = []
 
-    elif key == "coral_img":
-        st.session_state["coral_img"] = []
-    elif key == "chart_img":
-        st.session_state["chart_img"] = []
-    else:
-        st.session_state[key] = 100
+#     elif key == "coral_img":
+#         st.session_state["coral_img"] = []
+#     elif key == "chart_img":
+#         st.session_state["chart_img"] = []
+#     else:
+#         st.session_state[key] = 100
 
 # @st.cache_data
 def main():
     # ---------- HEADER ----------
 
     # st.title('Image Segmentation and Analysis')
-    st.title('Select the coral and the chart')
+    st.title("Select the coral and the chart")
 
+    # # initialize the session state
     # if "coral_img" not in st.session_state:
     #     st.session_state["coral"] = None
     # if "chart_img" not in st.session_state:
     #     st.session_state["coral"] = None
+    if "chart" not in st.session_state:
+        st.session_state["chart"] = None
+    if "coral" not in st.session_state:
+        st.session_state["coral"] = None
 
     if st.button("Reset Session"):
         for key in st.session_state.keys():
@@ -225,86 +232,58 @@ def main():
         if "coral" not in st.session_state:
             st.session_state["coral"] = None
 
-    # ... (initialization of session state)
-    # angle = st.sidebar.slider("Rotation Angle", -180, 180, 0)
-    # coral_image , color_chart_image =[] , []
 
-    uploaded_file = st.file_uploader("Choose an image...", type=["bmp", "jpg", "jpeg", "png", "svg"])
+    uploaded_file = st.file_uploader("Choose an image...", type=["bmp", "jpg", "jpeg", "png", "svg"], key="image")
     if uploaded_file is not None:
         image = get_image(uploaded_file)
 
 
         selected_regions = select_coral_and_color_chart_area(image)
-        print (selected_regions)
-        if st.button("Save Images to memory"):
+        # print (selected_regions)
+        if st.button("Save Images to Memory"):
             dictionary_of_crops, dictionary_of_greys = get_coral_and_chart_image(image , selected_regions)
-            list_of_images=[item for key,item in dictionary_of_crops.items()]
-            st.image(list_of_images,use_column_width=True)
-            print(dictionary_of_crops.keys())
-            st.session_state["coral_img"] = dictionary_of_crops["coral"]
-            st.session_state["chart_img"] = dictionary_of_crops["chart"]
+            # check that dictionary has the right keys
+            try:
+                if "coral" not in dictionary_of_crops.keys() or "chart" not in dictionary_of_crops.keys():
+                    st.write("Please reset the session and try again")
+                    # st.stop()
+                else : 
+                    list_of_images=[item for key,item in dictionary_of_crops.items()]
+                    st.image(list_of_images,use_column_width=True)
+                    print(dictionary_of_crops.keys())
+                    st.session_state["coral_img"] = dictionary_of_crops["coral"]
+                    st.session_state["chart_img"] = dictionary_of_crops["chart"]
+            except:
+                st.write("Please reset the session and try again")
+                # st.stop()
+            # list_of_images=[item for key,item in dictionary_of_crops.items()]
+            # st.image(list_of_images,use_column_width=True)
+            # print(dictionary_of_crops.keys())
+            # st.session_state["coral_img"] = dictionary_of_crops["coral"]
+            # st.session_state["chart_img"] = dictionary_of_crops["chart"]
 
-    if st.button("Load your color chart text file"):
-        # Load the color chart image that is a text file
-        uploaded_file = st.file_uploader("Choose a text file...", type=["txt"])
-        if uploaded_file is not None:
-            # Load the text file
-            # the file is a text file with the color chart
-            my_personal_chart_file = uploaded_file.read()
-            # loop over the rows of the file and store it on a dictionary
-            my_personal_chart = {}
-            for row in my_personal_chart_file:
-                key, value = row.split(":")
-                my_personal_chart[key] = value
-            st.session_state["custom_color_chart"] = my_personal_chart
-            OcrAnalysis.plot_custom_colorchart(my_personal_chart)
+    
+    st.markdown("## You can load your own color chart")
+    st.write("Please upload a text file with the color chart in the following format:")
+    st.write("color_name: (R, G, B)")
+    st.write("For example:")
+    st.write("B1: (234, 233, 228)")
+    st.write("B2: (225, 222, 189)") 
+    # st.write("B3: (225, 222, 158)")
+    # st.write("B4: (219, 218, 110)")
+    # st.write("B5: (190, 199, 83)")
+    # st.write("B6: (157, 179, 72)")
 
+    uploaded_file_txt = st.file_uploader("Choose a text file...", type=["txt"], key="color_chart")
+    if uploaded_file_txt is not None:
 
+        my_personal_chart  = pd.read_csv(uploaded_file_txt, sep=":", header=None)
+        my_personal_chart.set_index(0, inplace=True)
+        my_personal_chart = my_personal_chart[1].apply(lambda x: tuple(map(int, x.replace("(","").replace(")","").split(",")))).to_dict()
+        st.session_state["custom_color_chart"] = my_personal_chart
+        OcrAnalysis.plot_custom_colorchart(my_personal_chart)
 
-            # r
-
-        # with st.container():
-        #     lcol, mcol, rcol = st.columns(3)
-
-        #     with lcol.expander("↩️ Reset Coral Image", expanded=True):
-        #         # if "coral_img" not in st.session_state:
-        #         #         st.session_state["coral_img"] = 0
-        #         # st.image(
-        #         #         st.session_state["coral_img"],
-        #         #         use_column_width="auto",
-        #         #         caption=f"Coral",
-        #         #     )
-
-        #         if st.button( "↩️ Reset Coral Image",
-        #                         on_click=_reset,
-        #                         use_container_width=True,
-        #                         kwargs={"key": "coral_img"},
-        #                     ):
-        #                         st.success("Coral is empty!")
-
-
-        #     with mcol.expander("↩️ Reset Color Chart Image", expanded=True):
-        #         # if "chart_img" not in st.session_state:
-        #         #         st.session_state["chart_img"] = 0
-        #         # st.image(
-        #         #         st.session_state["chart_img"],
-        #         #         use_column_width="auto",
-        #         #         caption=f"Coral",
-        #         #     )
-        #         if st.button( "↩️ Reset Chart Image",
-        #                         on_click=_reset,
-        #                         use_container_width=True,
-        #                         kwargs={"key": "chart_img"},
-        #                     ):
-        #                         st.success("Color Chart is empty!")
-
-        #     with rcol.expander("↩️ Reset All Images", expanded=True):
-        #         if st.button( "↩️ Reset All Images",
-        #                         on_click=_reset,
-        #                         use_container_width=True,
-        #                         kwargs={"key": "all"},
-        #                     ):
-        #                         st.success("All is empty!")
+   
 
 
     # go to the next page if done 
