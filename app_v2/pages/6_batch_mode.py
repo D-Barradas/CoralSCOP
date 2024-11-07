@@ -203,8 +203,8 @@ def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_R
 def main():
     st.title("Batch Mode")
     is_color_chart_in_session_state()
-    images = []
-    csvs = []
+    # images = []
+    # csvs = []
     uploaded_files = st.file_uploader("Choose the images ...", type=["bmp", "jpg", "jpeg", "png", "svg"], accept_multiple_files=True)
     for uploaded_file in uploaded_files:
         # bytes_data = uploaded_file.read()
@@ -215,6 +215,8 @@ def main():
         progress_text = "Operation in progress. Please wait."
         my_bar = st.progress(0, text=progress_text)
         for idx_f,uploaded_file in enumerate (uploaded_files)  :
+            name = uploaded_file.name.split(".")[0]
+
 
             custom_color_chart = st.session_state["custom_color_chart"]
             # print (custom_color_chart.keys() ,"for loop")
@@ -233,27 +235,25 @@ def main():
             list_of_images, titles = process_images(image, masks)
 
             if len(list_of_images) > 1:
-                st.write(f"Warning More than one coral image detected on image:{name}")
+                st.write(f"Warning {len(list_of_images)} coral images detected on image:{name}")
 
 
             # if len(list_of_images) > 1: # we have to change this for the for look 
-            for idx , img in enumerate ( list_of_images) : 
-                # relocate the idx to the for loop here and add the name of the image
-                # relocate also the st.session_state[f"mapped_image_{idx}_{name}"] = fig
-                # relocate also the st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
-                # we have to save the names of the images in a list to use it on the download button
+            with st.status(f"Processing images of {name} ...", expanded=True) as status:
+                for idx , img in enumerate ( list_of_images) : 
+                    # relocate the idx to the for loop here and add the name of the image
+                    # relocate also the st.session_state[f"mapped_image_{idx}_{name}"] = fig
+                    # relocate also the st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
+                    # we have to save the names of the images in a list to use it on the download button
 
-                name = uploaded_file.name.split(".")[0]
 
-                # now we will plot the images
-                # plot_compare_mapped_image_batch_mode(list_of_images[0],custom_color_chart,idx)
-                fig , csv = plot_compare_mapped_image_batch_mode_results_to_memory( img , custom_color_chart)
-                # save fig and csv into a dictionary that dictionary will be saved in the session state
-                st.session_state[f"mapped_image_{idx}_{name}"] = fig 
-                st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
-
-                images.append(st.session_state[f"mapped_image_{idx}_{name}"])
-                csvs.append(st.session_state[f"color_distribution_data_{idx}_{name}"])
+                    # now we will plot the images
+                    # plot_compare_mapped_image_batch_mode(list_of_images[0],custom_color_chart,idx)
+                    fig , csv = plot_compare_mapped_image_batch_mode_results_to_memory( img , custom_color_chart)
+                    # save fig and csv into a dictionary that dictionary will be saved in the session state
+                    st.session_state[f"mapped_image_{idx}_{name}"] = fig 
+                    st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
+                status.update(label=f"Process complete for {name}!", state="complete", expanded=False)
 
 
 
@@ -268,30 +268,68 @@ def main():
                 # plot_compare_mapped_image_batch_mode(img,custom_color_chart,idx)
     # here there is a button to download the results
     if st.button("Process Results"):
+        # print( len(images) , len(csvs) , "length of images and csvs")
         # Create lists to store images and CSVs
         # images = []
         # csvs = []
-        # names = []
-        # for idx, uploaded_file in enumerate(uploaded_files):
-        #     name = uploaded_file.name.split(".")[0]
-        #     names.append(name)
-        #     images.append(st.session_state[f"mapped_image_{idx}_{name}"])
-        #     csvs.append(st.session_state[f"color_distribution_data_{idx}_{name}"])
+        # names = []  
+        # get all the session state keys that contain the mapped images and the color distribution data
 
-        # Create a zip file with the images and CSVs
+        # for key in st.session_state.keys():
+        #     if "mapped_image" in key:
+        #         images.append(st.session_state.get(key))
+        #         # print (key)
+        #         # names.append(key.split("_")[-1])
+        #     elif "color_distribution_data" in key:
+        #         # print (key)
+        #         csvs.append(st.session_state.get(key))
+        
+        # print( len(images) , len(csvs) , "length of images and csvs")
+        # # Create a zip file with the images and CSVs
+        # results_zip = BytesIO()
+        # with ZipFile(results_zip, 'w') as z:
+        #     for idx, image in enumerate(images):
+        #         print (idx, image, type(image))
+        #         # image_path = f"mapped_image_{names[idx]}.png"
+        #         image_path = f"{image}.png"
+        #         image.savefig(image_path, format='png')
+        #         z.write(image_path)
+        #         os.remove(image_path)
+
+        #     for idx, csv in enumerate(csvs):
+        #         csv_path = f"{csv}.csv"
+        #         # csv_path = f"color_distribution_data_{names[idx]}.csv"
+        #         z.writestr(csv_path, csv)
+
+
         results_zip = BytesIO()
         with ZipFile(results_zip, 'w') as z:
-            for idx, image in enumerate(images):
-                # image_path = f"mapped_image_{names[idx]}.png"
-                image_path = f"{image}.png"
-                image.savefig(image_path, format='png')
-                z.write(image_path)
-                os.remove(image_path)
+            for key in st.session_state.keys():
+    
+                if "mapped_image" in key:
+                    image = st.session_state.get(key)
+                    csv = st.session_state.get(key.replace("mapped_image", "color_distribution_data"))
+                    image_path = f"{key}.png"
+                    image.savefig(image_path, format='png')
+                    z.write(image_path)
+                    os.remove(image_path)
+                    csv_path = f"{key.replace('mapped_image', 'color_distribution_data')}.csv"
+                    z.writestr(csv_path, csv)
+        #     for idx, image in enumerate(images):
+        #         print (idx, image, type(image))
+        #         # image_path = f"mapped_image_{names[idx]}.png"
+        #         image_path = f"{image}.png"
+        #         image.savefig(image_path, format='png')
+        #         z.write(image_path)
+        #         os.remove(image_path)
 
-            for idx, csv in enumerate(csvs):
-                csv_path = f"{csv}.csv"
-                # csv_path = f"color_distribution_data_{names[idx]}.csv"
-                z.writestr(csv_path, csv)
+        #     for idx, csv in enumerate(csvs):
+        #         csv_path = f"{csv}.csv"
+        #         # csv_path = f"color_distribution_data_{names[idx]}.csv"
+        #         z.writestr(csv_path, csv)
+
+
+
 
         # Download the zip file containing both images and CSVs
         st.download_button(
