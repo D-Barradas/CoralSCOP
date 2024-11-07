@@ -389,9 +389,16 @@ def switch_to_next():
 def switch_to_manual():
     """Must be one of ['streamlit starting page', 'cropping color chart', 'separate color chart', 'analysis and mapping', 'rotation of the color chart']"""
 
-    want_to_contribute = st.button("Go next phase?")
+    want_to_contribute = st.button("Manual selection?")
     if want_to_contribute:
         switch_page("manual selection of colors")
+
+def switch_to_perspective():
+    """Must be one of ['streamlit starting page', 'cropping color chart', 'separate color chart', 'analysis and mapping', 'rotation of the color chart']"""
+
+    want_to_contribute = st.button("Modify the perpective?")
+    if want_to_contribute:
+        switch_page("dewarp the image")
 
 
 
@@ -410,6 +417,7 @@ def main():
 
 
         switch_to_rotation_page()
+        switch_to_perspective()
         # switch_to_manual()
         selected_regions = define_region_selection(image)
 
@@ -518,7 +526,7 @@ def main():
                 mime="text/plain",
                 key="download_button_color_chart",
             )
-            os.remove("custom_color_chart.txt")
+            # os.remove("custom_color_chart.txt")
      
             # download the file
             # st.download_button(
