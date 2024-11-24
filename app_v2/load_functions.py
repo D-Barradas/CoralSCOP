@@ -248,8 +248,8 @@ def calculate_distances_to_colors(image):
             final_distances[key]=max_val
     df_final = pd.DataFrame.from_dict(final_distances,orient='index',columns=["Distance"])
     df_final.sort_values(by="Distance",ascending=True,inplace=True)
-    color_keys_selected= df_final.head(n=3).index.to_list()
-    color_selected_distance = df_final["Distance"].head(n=3).to_list()
+    color_keys_selected= df_final.head(n=5).index.to_list()
+    color_selected_distance = df_final["Distance"].head(n=5).to_list()
     lower_y_limit = color_selected_distance[0] - 0.5
     higher_y_limit = color_selected_distance[-1] + 0.5
     hex_colors_map = [RGB2HEX(color_map_RGB[key]) for key in color_keys_selected]
