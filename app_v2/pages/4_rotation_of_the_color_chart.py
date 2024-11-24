@@ -68,8 +68,10 @@ def main():
         is_color_chart_in_session_state()
         # image = st.session_state["chart_img"]
         # ... (code to create a slider for rotation)
-        rotation_angle = st.slider("Rotate image:", min_value=-180, max_value=180)
-        padding = st.slider("Padding", min_value=0, max_value=500, value=100)
+        with st.sidebar:
+
+            rotation_angle = st.slider("Rotate image:", min_value=-180, max_value=180)
+            padding = st.slider("Padding", min_value=0, max_value=500, value=100)
         # ... (code to apply the rotation)
         rotated_image = rotate_image(st.session_state["chart_img"], rotation_angle ,padding)
         st.image(rotated_image, caption="Color Chart to Rotate", use_column_width=True)

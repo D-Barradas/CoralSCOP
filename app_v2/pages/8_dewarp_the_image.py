@@ -74,14 +74,16 @@ def select_perspective_points(image_shape):
 
     st.markdown("### Select the points for perspective correction")
 
-    tl_x = st.slider("Top-Left X", 0, width, 0)
-    tl_y = st.slider("Top-Left Y", 0, height, 0)
-    tr_x = st.slider("Top-Right X", 0, width, width)
-    tr_y = st.slider("Top-Right Y", 0, height, 0)
-    br_x = st.slider("Bottom-Right X", 0, width, width)
-    br_y = st.slider("Bottom-Right Y", 0, height, height)
-    bl_x = st.slider("Bottom-Left X", 0, width, 0)
-    bl_y = st.slider("Bottom-Left Y", 0, height, height)
+    with st.sidebar:
+
+        tl_x = st.slider("Top-Left X", 0, width, 0)
+        tl_y = st.slider("Top-Left Y", 0, height, 0)
+        tr_x = st.slider("Top-Right X", 0, width, width)
+        tr_y = st.slider("Top-Right Y", 0, height, 0)
+        br_x = st.slider("Bottom-Right X", 0, width, width)
+        br_y = st.slider("Bottom-Right Y", 0, height, height)
+        bl_x = st.slider("Bottom-Left X", 0, width, 0)
+        bl_y = st.slider("Bottom-Left Y", 0, height, height)
 
     points = [(tl_x, tl_y), (tr_x, tr_y), (br_x, br_y), (bl_x, bl_y)]
     return points
