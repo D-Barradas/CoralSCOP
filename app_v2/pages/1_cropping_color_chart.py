@@ -102,7 +102,16 @@ def select_coral_and_color_chart_area(image):
 
     if selection:
         st.json(selection, expanded=False)
-        show_selection(image, selection)
+        try : 
+            show_selection(image, selection)
+        except ValueError as e:  #raised if `y` is empty.
+            print (f"An error occurred while showing image selection: {e}")
+            st.markdown("## Can't display image ")
+            st.markdown("## Make the selection again, please! ")
+
+
+            pass
+        
         if selection_type == "box" : 
             # print (selection["selection"]["box"], type(selection["selection"]["box"]))
             if len(selection["selection"]["box"] ) != 0 :
