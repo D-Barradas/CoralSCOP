@@ -17,8 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # Install Miniforge
-RUN wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh --no-check-certificate
-RUN bash Mambaforge-Linux-x86_64.sh -b -p /opt/conda && rm Mambaforge-Linux-x86_64.sh
+RUN wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh --no-check-certificate
+RUN bash Miniforge3-Linux-x86_64.sh -b -p /opt/conda && rm Miniforge3-Linux-x86_64.sh
 
 # Set path to conda
 ENV PATH=/opt/conda/bin:$PATH
@@ -49,7 +49,12 @@ RUN pip install --upgrade pip --no-cache-dir && \
     pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 --no-cache-dir && \
     pip install jupyterlab opencv-python pycocotools matplotlib onnxruntime onnx plotly streamlit scikit-learn scikit-image streamlit-extras easyocr --no-cache-dir
 
-RUN pip install git+https://github.com/facebookresearch/segment-anything.git
+# RUN pip install git+https://github.com/facebookresearch/segment-anything.git
+
+# RUN git clone git@github.com:facebookresearch/segment-anything.git
+# RUN cd segment-anything
+# RUN pip install -e .
+
 # Make port 8501 available to the world outside this container
 EXPOSE 8501
 
