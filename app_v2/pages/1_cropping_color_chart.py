@@ -1,11 +1,6 @@
 import streamlit as st
-# from PIL import Image, UnidentifiedImageError
-# # import io
-# # import requests
-# # import os
 import pandas as pd
 import cv2
-# from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 from streamlit_extras.image_selector import image_selector, show_selection
 import numpy as np
 from streamlit_extras.switch_page_button import switch_page
@@ -22,15 +17,6 @@ st.set_page_config(page_title="Cropping Image", page_icon="🌍")
 with open("load_functions.py") as f:
     exec(f.read())
 
-# # @st.cache_data
-# def crop_my_image(image,boxes,tag):
-#     ### this looks like it can include the mayority of the section we want to analyze
-
-#     x, y, width, height =  boxes[tag]
-#     x, y, width, height = int(x),int(y),int(width), int(height)
-#     cropped_image = image[y:height,x:width]
-
-#     return cropped_image
 
 def correct_tilt(image, gradient):
 
@@ -108,8 +94,6 @@ def select_coral_and_color_chart_area(image):
             print (f"An error occurred while showing image selection: {e}")
             st.markdown("## Can't display image ")
             st.markdown("## Make the selection again, please! ")
-
-
             pass
         
         if selection_type == "box" : 
@@ -201,21 +185,6 @@ def switch_to_next():
 
 
 
-
-
-# def _reset(key: str) -> None:
-#     if key == "all":
-#         st.session_state["coral_img"] = []
-#         st.session_state["chart_img"] = []
-
-#     elif key == "coral_img":
-#         st.session_state["coral_img"] = []
-#     elif key == "chart_img":
-#         st.session_state["chart_img"] = []
-#     else:
-#         st.session_state[key] = 100
-
-# @st.cache_data
 def main():
     # ---------- HEADER ----------
 
