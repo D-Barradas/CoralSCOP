@@ -120,6 +120,35 @@ def background_to_black ( image, index ,masks ):
     masked_img[masks[index]['segmentation']==False] = (0, 0, 0)  # Set masked pixels to black
     return masked_img ,masked_pixels
 
+# create a function to convert all the black pixels to white 
+def convert_black_to_white(image):
+    image = np.array(image)
+    image[np.where((image == [0,0,0]).all(axis=2))] = [255,255,255]
+    return image
+
+def map_white_pixels(source_image, target_image):
+    """Maps white pixels from the source image to the target image.
+
+    Args:
+        source_image: The source image as a NumPy array.
+        target_image: The target image as a NumPy array.
+
+    Returns:
+        A modified target image with the white pixels from the source mapped onto it.
+    """
+
+    # Ensure both images have the same dimensions
+    if source_image.shape != target_image.shape:
+        raise ValueError("Source and target images must have the same dimensions.")
+
+    # Create a mask for white pixels in the source image
+    source_white_mask = np.all(source_image == 255, axis=-1)
+
+    # Map white pixels from source to target based on their positions
+    target_image[source_white_mask] = source_image[source_white_mask]
+
+    return target_image
+
 def get_sorted_by_area(image, anns):
 
     # print(type(image),type(anns),"get_sorte_by_area")
@@ -442,6 +471,11 @@ def plot_compare_mapped_image(img1_rgb,color_map_RGB):
             percentage_color_name.append(p)
 
     hex_colors_map = [RGB2HEX(color_map[key]) for key in color_name]
+
+    # apply convert_black_to_white
+    img1_rgb = convert_black_to_white(img1_rgb)
+    mapped_image = convert_black_to_white(mapped_image)
+    img1_rgb = map_white_pixels(source_image=mapped_image,target_image=img1_rgb)
 
 
     # Create a subplot grid with adjusted row widths and column widths
