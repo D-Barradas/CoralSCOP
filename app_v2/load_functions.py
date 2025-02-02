@@ -113,6 +113,7 @@ def show_images_grid(images, titles=None, figsize=(20, 20)):
 
     plt.tight_layout()
     plt.show()
+
 def background_to_black ( image, index ,masks ):
     # Apply the mask to the image
     masked_img = image.copy()
@@ -204,6 +205,23 @@ def get_colors(image, number_of_colors, show_chart):
         fig.update_traces(textinfo='percent+label')
         st.plotly_chart(fig)
 
+        # add a download button for the color distribution data
+        color_distribution_data = pd.DataFrame({
+            'Color': list(counts.keys()),
+            'Count': list(counts.values()),
+            'Hex': hex_colors
+        })
+
+            # Convert the DataFrame to a CSV string
+        csv = color_distribution_data.to_csv(index=False).encode('utf-8')
+
+        st.download_button(
+            label="Download Color Distribution Data",
+            data=csv,
+            file_name="Pie_chart_color_distribution_data.csv",
+            mime="text/csv",
+        )
+
     return rgb_colors
     
 
@@ -277,7 +295,7 @@ def calculate_distances_to_colors(image):
             final_distances[key]=max_val
     df_final = pd.DataFrame.from_dict(final_distances,orient='index',columns=["Distance"])
     df_final.sort_values(by="Distance",ascending=True,inplace=True)
-    color_keys_selected= df_final.head(n=5).index.to_list()
+    color_keys_selected = df_final.head(n=5).index.to_list()
     color_selected_distance = df_final["Distance"].head(n=5).to_list()
     lower_y_limit = color_selected_distance[0] - 0.5
     higher_y_limit = color_selected_distance[-1] + 0.5
@@ -288,6 +306,9 @@ def calculate_distances_to_colors(image):
 def plot_compare(img1_rgb, color_keys_selected, color_selected_distance, lower_y_limit, higher_y_limit, hex_colors_map,title):
     # Create a subplot grid with 1 row and 2 columns
     fig = make_subplots(rows=1, cols=2, subplot_titles=(title, "Euclidean Distance from Top 5 Colors Detected"))
+    
+    # Convert black pixels to white in the image to show
+    img1_rgb = convert_black_to_white(img1_rgb)
 
     # Add the image to the first subplot
     fig.add_trace(go.Image(z=img1_rgb), row=1, col=1)
@@ -308,6 +329,23 @@ def plot_compare(img1_rgb, color_keys_selected, color_selected_distance, lower_y
 
     # Show the plot
     st.plotly_chart(fig)
+
+    # Create a csv file with the color distribution data
+    color_distribution_data = pd.DataFrame({
+        'Color Name': color_keys_selected,
+        'Euclidean Distance': color_selected_distance,
+        'Hex Color': hex_colors_map
+    })
+
+    # Convert the DataFrame to a CSV string
+    csv = color_distribution_data.to_csv(index=False).encode('utf-8')
+ # Create a download button and offer the CSV string for download
+    st.download_button(
+        label="Download Color Distribution Data",
+        data= csv,
+        file_name="Euclidean_Distance_from_Top_5_Colors_Detected.csv",
+        mime="text/csv",
+    )
     #fig.show()
 
 
