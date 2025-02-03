@@ -77,9 +77,18 @@ def get_image(uploaded_file):
     # Apply any preprocessing like histogram preprocessing
     # image = preprocess_histograms(image=image)
 
+    # Get the dimensions of the image
+    height, width = image.shape[:2]
+
+    # Calculate the aspect ratio
+    aspect_ratio = width / height
+
+    # Define the new width and height while maintaining the aspect ratio
+    new_width = 1800
+    new_height = int(new_width / aspect_ratio)
+
     # Resize the image
-    image = cv2.resize(image, (1800, 1200), interpolation=cv2.INTER_AREA)
-    # image = cv2.resize(image, (2400, 1800), interpolation=cv2.INTER_AREA)
+    image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
     # image = cv2.resize(image, (3600, 2400), interpolation=cv2.INTER_AREA)
 
