@@ -85,67 +85,6 @@ def load_model(model_option='Model_B'):
     return mask_generator
 
 
-
-def plot_compare_mapped_image_batch_mode(img1_rgb,color_map_RGB, idx):
-    # check if the black color is in the color map if not add it
-    if 'Black' not in color_map_RGB.keys():
-        color_map_RGB['Black'] = tuple([0,0,0])
-
-    mapped_image , color_map , color_to_pixels = map_color_to_pixels(image=img1_rgb, color_map_RGB=color_map_RGB )
-    del color_map['Black'] 
-    del color_to_pixels['Black']
-
-
-    color_counts, reverse_dict = count_pixel_colors(image=mapped_image , color_map_RGB=color_map)
-    lists = sorted(reverse_dict.items(), key=lambda kv: kv[1], reverse=True)
-
-    color_name, percentage_color_name = [], []
-    for c, p in lists:
-        if p > 1:
-            color_name.append(c)
-            percentage_color_name.append(p)
-
-    hex_colors_map = [RGB2HEX(color_map[key]) for key in color_name]
-
-
-    # Create a subplot grid with adjusted row widths and column widths
-    fig = make_subplots(rows=1, cols=3, 
-                        column_widths=[0.35, 0.35, 0.3],  # Adjust column widths
-                        subplot_titles=("Original", "Mapped Image", "Color Distribution"))
-
-    # Add the original image, mapped image, and the bar chart to respective subplots
-    fig.add_trace(go.Image(z=img1_rgb), row=1, col=1)
-    fig.add_trace(go.Image(z=mapped_image), row=1, col=2)
-    fig.add_trace(go.Bar(x=color_name, y=percentage_color_name, marker_color=hex_colors_map), row=1, col=3)
-
-    # Update layout and axis properties
-    fig.update_layout(showlegend=False, height=600, width=1500)  # Adjust the total figure size
-    fig.update_xaxes(title_text="Color code in chart", row=1, col=3)
-    fig.update_yaxes(title_text="Percentage of pixel on the image", row=1, col=3)
-
-    # Convert the color distribution data into a DataFrame
-    color_distribution_data = pd.DataFrame({
-        'Color Name': color_name,
-        'Percentage': percentage_color_name,
-        'Hex Color': hex_colors_map
-    })
-    
-    # Convert the DataFrame to a CSV string
-    csv = color_distribution_data.to_csv(index=False).encode('utf-8')
-    
-    
-    # Display the plot in Streamlit
-    st.plotly_chart(fig)
-
-    # Create a download button and offer the CSV string for download
-    st.download_button(
-        label="Download Color Distribution Data",
-        data=csv,
-        file_name="color_distribution_data.csv",
-        mime="text/csv",
-        key=idx
-    )
-
 def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_RGB):
     # check if the black color is in the color map if not add it
     if 'Black' not in color_map_RGB.keys():
@@ -200,6 +139,42 @@ def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_R
     return fig, csv
 
 
+def plot_compare_results_to_memory(img1_rgb, color_keys_selected, color_selected_distance, lower_y_limit, higher_y_limit, hex_colors_map, title):
+    # Convert black pixels to white in the image to show
+    img1_rgb = convert_black_to_white(img1_rgb)
+
+    # Create a subplot grid with 1 row and 2 columns
+    fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+
+    # Add the image to the first subplot
+    axes[0].imshow(img1_rgb)
+    axes[0].set_title(title)
+    axes[0].axis('off')
+
+    # Add the bar chart to the second subplot
+    axes[1].bar(color_keys_selected, color_selected_distance, color=hex_colors_map)
+    axes[1].set_title("Euclidean Distance from Top 5 Colors Detected")
+    axes[1].set_xlabel("Color code in chart")
+    axes[1].set_ylabel("Euclidean Distance")
+    axes[1].set_ylim([lower_y_limit, higher_y_limit])
+
+    plt.tight_layout()
+    plt.close()
+
+    # Create a csv file with the color distribution data
+    color_distribution_data = pd.DataFrame({
+        'Color Name': color_keys_selected,
+        'Euclidean Distance': color_selected_distance,
+        'Hex Color': hex_colors_map
+    })
+
+    csv = color_distribution_data.to_csv(index=False).encode('utf-8')
+
+    return fig, csv
+
+
+
+
 def main():
     st.title("Batch Mode")
     is_color_chart_in_session_state()
@@ -245,6 +220,14 @@ def main():
                     # relocate also the st.session_state[f"mapped_image_{idx}_{name}"] = fig
                     # relocate also the st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
                     # we have to save the names of the images in a list to use it on the download button
+
+                    title = f'Image {idx} of {name}'
+
+                    color_keys_selected, color_selected_distance, lower_y_limit, higher_y_limit, hex_colors_map = calculate_distances_to_colors(image=img)
+                    fig_1, csv_1 = plot_compare_results_to_memory(img, color_keys_selected, color_selected_distance, lower_y_limit, higher_y_limit, hex_colors_map, title)
+
+                    st.session_state[f"euclidian_distance_{idx}_{name}"] = fig_1 
+                    st.session_state[f"clustering_color_data_{idx}_{name}"] = csv_1
 
 
                     # now we will plot the images
@@ -308,28 +291,24 @@ def main():
     
                 if "mapped_image" in key:
                     image = st.session_state.get(key)
-                    csv = st.session_state.get(key.replace("mapped_image", "color_distribution_data"))
                     image_path = f"{key}.png"
-                    image.savefig(image_path, format='png')
+                    image.savefig(image_path, format="png")
                     z.write(image_path)
                     os.remove(image_path)
-                    csv_path = f"{key.replace('mapped_image', 'color_distribution_data')}.csv"
+                    
+                    image_cluster = st.session_state.get(key.replace("mapped_image", "color_distribution_data"))
+                    image_path = f"{key.replace("mapped_image", "color_distribution_data")}.png"
+                    image.savefig(image_path, format="png")
+                    z.write(image_cluster)
+                    os.remove(image_cluster)
+
+                    csv = st.session_state.get(key.replace("mapped_image", "color_distribution_data"))
+                    csv_path = f"{key.replace("mapped_image", "color_distribution_data")}.csv"
                     z.writestr(csv_path, csv)
-        #     for idx, image in enumerate(images):
-        #         print (idx, image, type(image))
-        #         # image_path = f"mapped_image_{names[idx]}.png"
-        #         image_path = f"{image}.png"
-        #         image.savefig(image_path, format='png')
-        #         z.write(image_path)
-        #         os.remove(image_path)
 
-        #     for idx, csv in enumerate(csvs):
-        #         csv_path = f"{csv}.csv"
-        #         # csv_path = f"color_distribution_data_{names[idx]}.csv"
-        #         z.writestr(csv_path, csv)
-
-
-
+                    csv_cluster = st.session_state.get(key.replace("mapped_image", "clustering_color_data"))
+                    csv_path = f"{key.replace("mapped_image", "clustering_color_data")}.csv"
+                    z.writestr(csv_path, csv_cluster)
 
         # Download the zip file containing both images and CSVs
         st.download_button(
