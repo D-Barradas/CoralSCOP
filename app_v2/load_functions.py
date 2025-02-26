@@ -522,7 +522,7 @@ def plot_compare_mapped_image(img1_rgb,color_map_RGB):
     # apply convert_black_to_white
     img1_rgb = convert_black_to_white(img1_rgb)
     mapped_image = convert_black_to_white(mapped_image)
-    img1_rgb = map_white_pixels(source_image=mapped_image,target_image=img1_rgb)
+    # img1_rgb = map_white_pixels(source_image=mapped_image,target_image=img1_rgb)
 
 
     # Create a subplot grid with adjusted row widths and column widths
