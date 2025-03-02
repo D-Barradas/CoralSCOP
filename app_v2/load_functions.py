@@ -193,7 +193,11 @@ def RGB2HEX(color):
 
 
 def get_colors(image, number_of_colors, show_chart):
-    modified_image = image.reshape(image.shape[0]*image.shape[1], 3)
+    # Drop all black pixels from the image
+    non_black_pixels = image[np.any(image != [0, 0, 0], axis=-1)]
+    
+    modified_image = non_black_pixels.reshape(non_black_pixels.shape[0], 3)
+    # modified_image = image.reshape(image.shape[0]*image.shape[1], 3)
 
     clf = KMeans(n_clusters=number_of_colors, n_init='auto', random_state=73)
     labels = clf.fit_predict(modified_image)
@@ -682,8 +686,13 @@ def crop_my_image(image,boxes,tag):
     return cropped_image
 
 def get_colors_df(image, number_of_colors, show_chart):
+
+        # Drop all black pixels from the image
+    non_black_pixels = image[np.any(image != [0, 0, 0], axis=-1)]
     
-    modified_image = image.reshape( image.shape[0]*image.shape[1],3  )
+    modified_image = non_black_pixels.reshape(non_black_pixels.shape[0], 3)
+    
+    # modified_image = image.reshape( image.shape[0]*image.shape[1],3  )
         
     clf = KMeans(n_clusters = number_of_colors, n_init='auto', random_state=73)
     labels = clf.fit_predict(modified_image)
@@ -735,5 +744,64 @@ def is_dark_color(hex_code):
 
     # Threshold based on luminance and desired darkness level
     return luminosity < 0.05  # Adjust this threshold as needed
+
+## new definitions 
+
+def add_padding_to_images(images, target_shape):
+    """
+    Adds padding to a list of images to match the target shape.
+
+    Args:
+        images (list): List of numpy.ndarray images to pad.
+        target_shape (tuple): Target shape (height, width) to pad images to.
+
+    Returns:
+        padded_images: List of padded images.
+    """
+    padded_images = []
+    target_height, target_width = target_shape
+
+    for img in images:
+        height, width, _ = img.shape
+        top_pad = (target_height - height) // 2
+        bottom_pad = target_height - height - top_pad
+        left_pad = (target_width - width) // 2
+        right_pad = target_width - width - left_pad
+
+        padded_img = cv2.copyMakeBorder(
+            img, top_pad, bottom_pad, left_pad, right_pad, cv2.BORDER_CONSTANT, value=[0, 0, 0]
+        )
+        padded_images.append(padded_img)
+
+    return padded_images
+
+def stack_images(images, direction='horizontal'):
+    """
+    Stacks a list of numpy.ndarray images either horizontally or vertically.
+
+    Args:
+        images (list): List of numpy.ndarray images to stack.
+        direction (str): Direction to stack images ('horizontal' or 'vertical').
+
+    Returns:
+        stacked_image: The stacked image as a numpy.ndarray.
+    """
+    if direction not in ['horizontal', 'vertical']:
+        raise ValueError("Direction must be 'horizontal' or 'vertical'")
+
+    # Determine the target shape for padding
+    max_height = max(img.shape[0] for img in images)
+    max_width = max(img.shape[1] for img in images)
+    target_shape = (max_height, max_width)
+
+    # Add padding to images to match the target shape
+    padded_images = add_padding_to_images(images, target_shape)
+
+    if direction == 'horizontal':
+        stacked_image = np.hstack(padded_images)
+    else:
+        stacked_image = np.vstack(padded_images)
+
+    return stacked_image
 
 
