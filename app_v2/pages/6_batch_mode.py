@@ -134,9 +134,9 @@ def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_R
     })
 
     # Convert the DataFrame to a CSV string
-    csv = color_distribution_data.to_csv(index=False).encode('utf-8')
-
-    return fig, csv
+    # csv = color_distribution_data.to_csv(index=False).encode('utf-8')
+    # csv = color_distribution_data.to_csv("color_distribution_data.csv",index=False, encoding = "utf-8")
+    return fig, color_distribution_data
 
 
 def plot_compare_results_to_memory(img1_rgb, color_keys_selected, color_selected_distance, lower_y_limit, higher_y_limit, hex_colors_map, title):
@@ -168,9 +168,10 @@ def plot_compare_results_to_memory(img1_rgb, color_keys_selected, color_selected
         'Hex Color': hex_colors_map
     })
 
-    csv = color_distribution_data.to_csv(index=False).encode('utf-8')
+    # csv = color_distribution_data.to_csv(index=False).encode('utf-8')
+    # csv = color_distribution_data.to_csv("Pie_color_chart.csv",index=False, encoding="utf-8")
 
-    return fig, csv
+    return fig, color_distribution_data
 
 
 
@@ -220,12 +221,11 @@ def main():
                     # relocate also the st.session_state[f"mapped_image_{idx}_{name}"] = fig
                     # relocate also the st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
                     # we have to save the names of the images in a list to use it on the download button
-
-                    title = f'Image {idx} of {name}'
-
+                    # 
+                    title = f"Image {idx} of {name}"
                     color_keys_selected, color_selected_distance, lower_y_limit, higher_y_limit, hex_colors_map = calculate_distances_to_colors(image=img)
                     fig_1, csv_1 = plot_compare_results_to_memory(img, color_keys_selected, color_selected_distance, lower_y_limit, higher_y_limit, hex_colors_map, title)
-
+                    
                     st.session_state[f"euclidian_distance_{idx}_{name}"] = fig_1 
                     st.session_state[f"clustering_color_data_{idx}_{name}"] = csv_1
 
@@ -245,70 +245,47 @@ def main():
             # show the progress bar here
             percent_complete = (idx_f + 1) / len(uploaded_files)
             my_bar.progress(percent_complete , text=progress_text)
-                # for img in list_of_images[1:]:
-                #     plot_compare_mapped_image_batch_mode(img,custom_color_chart,idx)
-            # for img in list_of_images:
-                # plot_compare_mapped_image_batch_mode(img,custom_color_chart,idx)
+
     # here there is a button to download the results
     if st.button("Process Results"):
-        # print( len(images) , len(csvs) , "length of images and csvs")
-        # Create lists to store images and CSVs
-        # images = []
-        # csvs = []
-        # names = []  
-        # get all the session state keys that contain the mapped images and the color distribution data
-
-        # for key in st.session_state.keys():
-        #     if "mapped_image" in key:
-        #         images.append(st.session_state.get(key))
-        #         # print (key)
-        #         # names.append(key.split("_")[-1])
-        #     elif "color_distribution_data" in key:
-        #         # print (key)
-        #         csvs.append(st.session_state.get(key))
-        
-        # print( len(images) , len(csvs) , "length of images and csvs")
-        # # Create a zip file with the images and CSVs
-        # results_zip = BytesIO()
-        # with ZipFile(results_zip, 'w') as z:
-        #     for idx, image in enumerate(images):
-        #         print (idx, image, type(image))
-        #         # image_path = f"mapped_image_{names[idx]}.png"
-        #         image_path = f"{image}.png"
-        #         image.savefig(image_path, format='png')
-        #         z.write(image_path)
-        #         os.remove(image_path)
-
-        #     for idx, csv in enumerate(csvs):
-        #         csv_path = f"{csv}.csv"
-        #         # csv_path = f"color_distribution_data_{names[idx]}.csv"
-        #         z.writestr(csv_path, csv)
-
-
         results_zip = BytesIO()
         with ZipFile(results_zip, 'w') as z:
             for key in st.session_state.keys():
     
                 if "mapped_image" in key:
+                    # st.write(f"{key}.png")
+                    # st.write(f"{key.replace("mapped_image", "euclidian_distance")}.png")
+                    # st.write(f"{key.replace("mapped_image", "color_distribution_data")}.csv")
+                    # st.write(f"{key.replace("mapped_image", "clustering_color_data")}.csv")
+
                     image = st.session_state.get(key)
                     image_path = f"{key}.png"
                     image.savefig(image_path, format="png")
                     z.write(image_path)
                     os.remove(image_path)
-                    
-                    image_cluster = st.session_state.get(key.replace("mapped_image", "color_distribution_data"))
-                    image_path = f"{key.replace("mapped_image", "color_distribution_data")}.png"
-                    image.savefig(image_path, format="png")
-                    z.write(image_cluster)
-                    os.remove(image_cluster)
 
+                    # save the other plot
+                    image_cluster = st.session_state.get(key.replace("mapped_image", "euclidian_distance"))
+                    image_path_cluster = f"{key.replace("mapped_image", "euclidian_distance")}.png"
+                    image_cluster.savefig(image_path_cluster, format="png")
+                    z.write(image_path_cluster)
+                    os.remove(image_path_cluster)
+
+                    # save the csv
                     csv = st.session_state.get(key.replace("mapped_image", "color_distribution_data"))
                     csv_path = f"{key.replace("mapped_image", "color_distribution_data")}.csv"
-                    z.writestr(csv_path, csv)
-
+                    csv.to_csv(csv_path, index=False)
+                    z.write(csv_path)
+                    os.remove(csv_path)
+                    # z.writestr(csv_path, csv)
+                    
+                    # save the other csv
                     csv_cluster = st.session_state.get(key.replace("mapped_image", "clustering_color_data"))
-                    csv_path = f"{key.replace("mapped_image", "clustering_color_data")}.csv"
-                    z.writestr(csv_path, csv_cluster)
+                    csv_path_cluster = f"{key.replace("mapped_image", "clustering_color_data")}.csv"
+                    csv_cluster.to_csv(csv_path_cluster, index=False)
+                    z.write(csv_path_cluster)
+                    os.remove(csv_path_cluster)
+                    # z.writestr(csv_path, csv_cluster)
 
         # Download the zip file containing both images and CSVs
         st.download_button(
@@ -328,4 +305,6 @@ def main():
 if __name__ == '__main__':
     main()
 
- 
+
+
+
