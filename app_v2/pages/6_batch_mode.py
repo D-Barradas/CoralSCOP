@@ -6,6 +6,7 @@ from io import BytesIO
 from zipfile import ZipFile
 sys.path.append('../')
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
+import time 
 
 with open("load_functions.py") as f:
     exec(f.read())
@@ -91,8 +92,10 @@ def plot_compare_mapped_image_batch_mode_results_to_memory(img1_rgb, color_map_R
         color_map_RGB['Black'] = tuple([0, 0, 0])
 
     mapped_image, color_map, color_to_pixels = map_color_to_pixels(image=img1_rgb, color_map_RGB=color_map_RGB)
-    del color_map['Black']
-    del color_to_pixels['Black']
+    if 'Black' in color_map.keys():
+        del color_map['Black']
+    if 'Black' in color_to_pixels.keys():
+        del color_to_pixels['Black']
 
     color_counts, reverse_dict = count_pixel_colors(image=mapped_image, color_map_RGB=color_map)
     lists = sorted(reverse_dict.items(), key=lambda kv: kv[1], reverse=True)
@@ -190,6 +193,9 @@ def main():
         mask_generator = load_model()
         progress_text = "Operation in progress. Please wait."
         my_bar = st.progress(0, text=progress_text)
+        total_time = 0  # Initialize total time
+        num_images = 0  # Initialize number of images processed
+
         for idx_f,uploaded_file in enumerate (uploaded_files)  :
             name = uploaded_file.name.split(".")[0]
 
@@ -216,7 +222,8 @@ def main():
 
             # if len(list_of_images) > 1: # we have to change this for the for look 
             with st.status(f"Processing images of {name} ...", expanded=True) as status:
-                for idx , img in enumerate ( list_of_images) : 
+                for idx , img in enumerate ( list_of_images) :
+                    start_time = time.time()  # Record the start time 
                     # relocate the idx to the for loop here and add the name of the image
                     # relocate also the st.session_state[f"mapped_image_{idx}_{name}"] = fig
                     # relocate also the st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
@@ -236,15 +243,22 @@ def main():
                     # save fig and csv into a dictionary that dictionary will be saved in the session state
                     st.session_state[f"mapped_image_{idx}_{name}"] = fig 
                     st.session_state[f"color_distribution_data_{idx}_{name}"] = csv
+
+                    end_time = time.time()  # Record the end time
+                    elapsed_time = end_time - start_time  # Calculate the elapsed time
+                    total_time += elapsed_time  # Update total time
+                    # num_images += 1  # Update number of images processed
+                    st.write(f"Time spent processing image {idx} of {name}: {elapsed_time:.2f} seconds")
+
                 status.update(label=f"Process complete for {name}!", state="complete", expanded=False)
 
-
-
-                # for img in list_of_images[1:]:
-                #     plot_compare_mapped_image_batch_mode_results_to_memory(img, custom_color_chart , idx)
             # show the progress bar here
             percent_complete = (idx_f + 1) / len(uploaded_files)
             my_bar.progress(percent_complete , text=progress_text)
+        # Calculate and display total and average time
+        # average_time = total_time / num_images if num_images > 0 else 0
+        st.write(f"Total time spent processing: {total_time:.2f} seconds ({total_time / 60:.2f} minutes)")
+        # st.write(f"Average time per image: {average_time:.2f} seconds ({average_time / 60:.2f} minutes)")
 
     # here there is a button to download the results
     if st.button("Process Results"):
