@@ -89,7 +89,15 @@ Since the color chart is a key part of the analysis, we have included a section 
 * `dewarp the image`:  You can fix the perspective of the image. This is useful when the image is not taken from the front and the OCR can not detect the labels
 * `manual selection`: You can select the manually the colors one by one from the chart segments from the image (The last resort if the OCR can not detect the labels , is time comsuming but it works)
 
-## Several images at the same time
+## Several images at the same time - Batch processing
+If you have several images to analyze you can use the batch processing section.
+* Load the color chart or select the custom color chart from a reprensentative image on the firts section
+* Go to the batch processing section
+* Select the images you want to analyze
+* Press the button to start the batch processing
+* Wait for the results
+
+The results will be saved on a zip file that you can download and check the results. This process will take more time since it will process all coral detected on all the images you have selected.
 
 
 
