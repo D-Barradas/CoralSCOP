@@ -55,7 +55,7 @@ def load_sam_model(model_type):
         # The following line is for using my second GPU, free
         # device = torch.device("cuda:1")
         print("CUDA is available!")
-        device = torch.device("cuda:1")
+        device = torch.device("cuda:0")
     else:
         print("CUDA is not available. Using CPU.")
         device = torch.device("cpu")
